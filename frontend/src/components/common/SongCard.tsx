@@ -10,6 +10,7 @@ type SongCardProps = {
   song: Song
   showFavorite?: boolean
   isFavorite?: boolean
+  onOpen?: (song: Song) => void
   onPlay?: (song: Song) => void
   onFavoriteToggle?: (song: Song) => void
   className?: string
@@ -19,16 +20,27 @@ export function SongCard({
   className,
   isFavorite = false,
   onFavoriteToggle,
+  onOpen,
   onPlay,
   showFavorite = false,
   song,
 }: SongCardProps) {
   return (
     <article
+      role={onOpen ? 'button' : undefined}
+      tabIndex={onOpen ? 0 : undefined}
       className={cn(
         'group overflow-hidden rounded-lg border border-border bg-card/80 shadow-lg shadow-black/10 transition hover:-translate-y-0.5 hover:border-primary/50',
+        onOpen && 'cursor-pointer',
         className,
       )}
+      onClick={() => onOpen?.(song)}
+      onKeyDown={(event) => {
+        if (onOpen && (event.key === 'Enter' || event.key === ' ')) {
+          event.preventDefault()
+          onOpen(song)
+        }
+      }}
     >
       <div className="relative aspect-square overflow-hidden bg-secondary">
         <img
@@ -45,7 +57,10 @@ export function SongCard({
           className="absolute bottom-3 right-3 rounded-full shadow-lg shadow-black/30"
           size="icon"
           type="button"
-          onClick={() => onPlay?.(song)}
+          onClick={(event) => {
+            event.stopPropagation()
+            onPlay?.(song)
+          }}
           aria-label={`Play ${song.title}`}
         >
           <Play className="size-4 fill-current" aria-hidden="true" />
@@ -70,7 +85,10 @@ export function SongCard({
             className="w-full"
             variant="secondary"
             type="button"
-            onClick={() => onFavoriteToggle?.(song)}
+            onClick={(event) => {
+              event.stopPropagation()
+              onFavoriteToggle?.(song)
+            }}
           >
             <Heart className={cn('size-4', isFavorite && 'fill-current text-primary')} aria-hidden="true" />
             {isFavorite ? 'Favorited' : 'Favorite'}
