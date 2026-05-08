@@ -3,7 +3,7 @@ import type { AuthCredentials, RegisterPayload, User } from '@/types'
 
 import { mockMutate, mockResolve } from './mockApi'
 
-const AUTH_STORAGE_KEY = 'muse.mockAuthenticatedUser'
+const AUTH_STORAGE_KEY = 'spotmyfy.mockAuthenticatedUser'
 
 function readStoredUser(): User | null {
   const storedUser = window.localStorage.getItem(AUTH_STORAGE_KEY)

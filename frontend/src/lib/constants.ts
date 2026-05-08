@@ -1,1 +1,1 @@
-export const APP_NAME = 'Muse'
+export const APP_NAME = 'SpotMyFy'
