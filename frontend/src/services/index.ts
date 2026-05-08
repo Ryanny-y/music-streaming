@@ -1,0 +1,6 @@
+export * as adminService from './adminService'
+export * as authService from './authService'
+export * as categoryService from './categoryService'
+export * as songService from './songService'
+export * as tagService from './tagService'
+export * as userService from './userService'

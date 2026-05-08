@@ -1,18 +1,24 @@
 import { Navigate, Outlet } from 'react-router-dom'
 
-import { MOCK_AUTH } from '@/lib/constants'
-import type { UserRole } from '@/types'
+import { useAuth } from '@/features/auth'
+import type { ApiUserRole } from '@/types'
 
 type RoleRouteProps = {
-  allowedRole: UserRole
+  allowedRole: ApiUserRole
 }
 
 export function RoleRoute({ allowedRole }: RoleRouteProps) {
-  if (!MOCK_AUTH.isAuthenticated) {
+  const { isAuthenticated, isLoading, user } = useAuth()
+
+  if (isLoading) {
+    return null
+  }
+
+  if (!isAuthenticated) {
     return <Navigate to="/login" replace />
   }
 
-  if (MOCK_AUTH.role !== allowedRole) {
+  if (user?.role !== allowedRole) {
     return <Navigate to="/app/dashboard" replace />
   }
 

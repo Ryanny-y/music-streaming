@@ -1,9 +1,15 @@
 import { Navigate, Outlet } from 'react-router-dom'
 
-import { MOCK_AUTH } from '@/lib/constants'
+import { useAuth } from '@/features/auth'
 
 export function ProtectedRoute() {
-  if (!MOCK_AUTH.isAuthenticated) {
+  const { isAuthenticated, isLoading } = useAuth()
+
+  if (isLoading) {
+    return null
+  }
+
+  if (!isAuthenticated) {
     return <Navigate to="/login" replace />
   }
 
