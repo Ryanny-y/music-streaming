@@ -6,7 +6,7 @@ import { Link, useParams } from 'react-router-dom'
 import { EmptyState, LoadingState, MusicPlayer, PageHeader, TagBadge } from '@/components/common'
 import { Button } from '@/components/ui'
 import { useAuth } from '@/features/auth'
-import { usePlayback } from '@/features/user/playbackContext'
+import { usePlayback } from '@/features/user/usePlayback'
 import { songService, userService } from '@/services'
 import type { Song } from '@/types'
 
@@ -20,7 +20,6 @@ export function AppSongDetailsPage() {
 
   useEffect(() => {
     if (!songId || !user) {
-      setIsLoading(false)
       return
     }
 

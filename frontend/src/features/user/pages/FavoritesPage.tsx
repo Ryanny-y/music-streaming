@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 
 import { EmptyState, LoadingState, PageHeader, SongCard, SongList } from '@/components/common'
 import { useAuth } from '@/features/auth'
-import { usePlayback } from '@/features/user/playbackContext'
+import { usePlayback } from '@/features/user/usePlayback'
 import { userService } from '@/services'
 import type { Song } from '@/types'
 
@@ -16,7 +16,6 @@ export function FavoritesPage() {
 
   useEffect(() => {
     if (!user) {
-      setIsLoading(false)
       return
     }
 

@@ -1,20 +1,21 @@
 import { Hash, Mic2 } from 'lucide-react'
 import { useEffect, useMemo, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 
 import { CategoryCard, EmptyState, LoadingState, PageHeader, SearchBar, SongCard } from '@/components/common'
-import { usePlayback } from '@/features/user/playbackContext'
+import { usePlayback } from '@/features/user/usePlayback'
 import { categoryService, songService, tagService } from '@/services'
 import type { Category, Song, Tag } from '@/types'
 
 export function SearchPage() {
-  const [query, setQuery] = useState('')
+  const [searchParams, setSearchParams] = useSearchParams()
   const [songs, setSongs] = useState<Song[]>([])
   const [categories, setCategories] = useState<Category[]>([])
   const [tags, setTags] = useState<Tag[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const { playSong } = usePlayback()
   const navigate = useNavigate()
+  const query = searchParams.get('q') ?? ''
 
   useEffect(() => {
     Promise.all([songService.getPublishedSongs(), categoryService.getCategories(), tagService.getTags()])
@@ -63,7 +64,21 @@ export function SearchPage() {
         title="Find your next song"
         description="Search across songs, artists, categories, and tags."
       />
-      <SearchBar value={query} onChange={setQuery} placeholder="Search songs, artists, moods, or categories" />
+      <SearchBar
+        value={query}
+        onChange={(value) => {
+          const nextParams = new URLSearchParams(searchParams)
+
+          if (value.trim()) {
+            nextParams.set('q', value)
+          } else {
+            nextParams.delete('q')
+          }
+
+          setSearchParams(nextParams, { replace: true })
+        }}
+        placeholder="Search songs, artists, moods, or categories"
+      />
 
       {isLoading ? (
         <LoadingState label="Searching catalog" />
@@ -99,7 +114,11 @@ export function SearchPage() {
                     className="flex items-center gap-3 rounded-lg border border-border bg-card/80 p-4 text-left transition hover:border-primary/60"
                     key={artist}
                     type="button"
-                    onClick={() => setQuery(artist)}
+                    onClick={() => {
+                      const nextParams = new URLSearchParams(searchParams)
+                      nextParams.set('q', artist)
+                      setSearchParams(nextParams, { replace: true })
+                    }}
                   >
                     <span className="grid size-10 place-items-center rounded-lg bg-primary/15 text-primary">
                       <Mic2 className="size-5" aria-hidden="true" />

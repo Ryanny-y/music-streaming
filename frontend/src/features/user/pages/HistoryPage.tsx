@@ -5,7 +5,7 @@ import { useNavigate } from 'react-router-dom'
 import { EmptyState, LoadingState, PageHeader } from '@/components/common'
 import { Button } from '@/components/ui'
 import { useAuth } from '@/features/auth'
-import { usePlayback } from '@/features/user/playbackContext'
+import { usePlayback } from '@/features/user/usePlayback'
 import { songService, userService } from '@/services'
 import type { ListeningHistory, Song } from '@/types'
 
@@ -19,7 +19,6 @@ export function HistoryPage() {
 
   useEffect(() => {
     if (!user) {
-      setIsLoading(false)
       return
     }
 

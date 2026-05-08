@@ -1,5 +1,5 @@
 import { BadgeCheck, Save } from 'lucide-react'
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 
 import { LoadingState, PageHeader, StatCard } from '@/components/common'
 import { Button } from '@/components/ui'
@@ -9,19 +9,17 @@ import type { UpdateProfilePayload } from '@/types'
 
 export function ProfilePage() {
   const { user } = useAuth()
-  const [form, setForm] = useState<UpdateProfilePayload>({})
+  const [form, setForm] = useState<UpdateProfilePayload>(() =>
+    user
+      ? {
+          fullName: user.fullName,
+          username: user.username,
+          email: user.email,
+        }
+      : {},
+  )
   const [isSaving, setIsSaving] = useState(false)
   const [savedMessage, setSavedMessage] = useState('')
-
-  useEffect(() => {
-    if (user) {
-      setForm({
-        fullName: user.fullName,
-        username: user.username,
-        email: user.email,
-      })
-    }
-  }, [user])
 
   if (!user) {
     return <LoadingState label="Loading profile" />

@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 
 import { EmptyState, LoadingState, PageHeader, SongCard, SongList } from '@/components/common'
-import { usePlayback } from '@/features/user/playbackContext'
+import { usePlayback } from '@/features/user/usePlayback'
 import { categoryService, songService } from '@/services'
 import type { Category, Song } from '@/types'
 
@@ -16,7 +16,6 @@ export function CategoryDetailsPage() {
 
   useEffect(() => {
     if (!categoryId) {
-      setIsLoading(false)
       return
     }
 

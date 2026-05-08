@@ -11,9 +11,9 @@ export function SongsPage() {
   const [categories, setCategories] = useState<Category[]>([])
   const [tags, setTags] = useState<Tag[]>([])
   const [isLoading, setIsLoading] = useState(true)
-  const [searchValue, setSearchValue] = useState(searchParams.get('q') ?? '')
   const navigate = useNavigate()
 
+  const searchValue = searchParams.get('q') ?? ''
   const selectedCategory = searchParams.get('category') ?? ''
   const selectedTag = searchParams.get('tag') ?? ''
 
@@ -26,11 +26,6 @@ export function SongsPage() {
       })
       .finally(() => setIsLoading(false))
   }, [])
-
-  useEffect(() => {
-    const query = searchParams.get('q') ?? ''
-    setSearchValue(query)
-  }, [searchParams])
 
   const filteredSongs = useMemo(() => {
     const normalizedSearch = searchValue.trim().toLowerCase()
@@ -73,10 +68,7 @@ export function SongsPage() {
       <section className="grid gap-4 rounded-lg border border-border bg-card/70 p-4 md:grid-cols-[1fr_14rem_14rem]">
         <SearchBar
           value={searchValue}
-          onChange={(value) => {
-            setSearchValue(value)
-            updateFilter('q', value)
-          }}
+          onChange={(value) => updateFilter('q', value)}
           placeholder="Search by song, artist, album, or mood"
         />
 

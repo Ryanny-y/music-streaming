@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom'
 
 import { CategoryCard, EmptyState, LoadingState, PageHeader, SongCard, StatCard } from '@/components/common'
 import { useAuth } from '@/features/auth'
-import { usePlayback } from '@/features/user/playbackContext'
+import { usePlayback } from '@/features/user/usePlayback'
 import { categoryService, songService, userService } from '@/services'
 import type { Category, Song, UserDashboard } from '@/types'
 
@@ -19,7 +19,6 @@ export function DashboardPage() {
 
   useEffect(() => {
     if (!user) {
-      setIsLoading(false)
       return
     }
 

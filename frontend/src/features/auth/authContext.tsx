@@ -1,18 +1,10 @@
-import { createContext, useCallback, useEffect, useMemo, useState, type PropsWithChildren } from 'react'
+import { useCallback, useEffect, useMemo, useState, type PropsWithChildren } from 'react'
 
 import { users } from '@/mocks/musicData'
 import { authService } from '@/services'
-import type { ApiUserRole, User } from '@/types'
+import type { ApiUserRole, RegisterPayload, User } from '@/types'
 
-type AuthContextValue = {
-  user: User | null
-  isLoading: boolean
-  isAuthenticated: boolean
-  loginAsRole: (role: ApiUserRole) => Promise<User>
-  logout: () => Promise<void>
-}
-
-export const AuthContext = createContext<AuthContextValue | null>(null)
+import { AuthContext, type AuthContextValue } from './authContextValue'
 
 const MOCK_USERS_BY_ROLE: Record<ApiUserRole, string> = {
   USER: 'user-sam',
@@ -60,15 +52,24 @@ export function AuthProvider({ children }: PropsWithChildren) {
     setUser(null)
   }, [])
 
+  const register = useCallback(async (payload: RegisterPayload) => {
+    const registeredUser = await authService.register(payload)
+
+    setUser(registeredUser)
+
+    return registeredUser
+  }, [])
+
   const value = useMemo<AuthContextValue>(
     () => ({
       user,
       isLoading,
       isAuthenticated: Boolean(user),
       loginAsRole,
+      register,
       logout,
     }),
-    [isLoading, loginAsRole, logout, user],
+    [isLoading, loginAsRole, logout, register, user],
   )
 
   return <AuthContext value={value}>{children}</AuthContext>

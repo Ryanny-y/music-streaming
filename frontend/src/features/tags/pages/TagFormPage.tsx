@@ -17,7 +17,6 @@ export function TagFormPage({ mode }: { mode: 'create' | 'edit' }) {
 
   useEffect(() => {
     if (mode !== 'edit' || !tagId) {
-      setIsLoading(false)
       return
     }
 

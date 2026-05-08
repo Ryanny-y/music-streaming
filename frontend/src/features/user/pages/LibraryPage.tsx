@@ -5,7 +5,7 @@ import { useNavigate } from 'react-router-dom'
 
 import { EmptyState, LoadingState, PageHeader, SearchBar, SongCard, SongList } from '@/components/common'
 import { Button } from '@/components/ui'
-import { usePlayback } from '@/features/user/playbackContext'
+import { usePlayback } from '@/features/user/usePlayback'
 import { categoryService, songService, tagService } from '@/services'
 import type { Category, Song, Tag } from '@/types'
 

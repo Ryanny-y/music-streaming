@@ -49,6 +49,22 @@ export function PublicLayout() {
             </Button>
           </div>
         </nav>
+        <nav className="flex gap-1 overflow-x-auto border-t border-border px-4 py-2 md:hidden">
+          {navLinks.map((link) => (
+            <NavLink
+              className={({ isActive }) =>
+                cn(
+                  'shrink-0 rounded-full px-4 py-2 text-sm text-muted-foreground transition hover:text-foreground',
+                  isActive && 'bg-secondary text-foreground',
+                )
+              }
+              key={link.to}
+              to={link.to}
+            >
+              {link.label}
+            </NavLink>
+          ))}
+        </nav>
       </header>
 
       <div className="mx-auto min-h-[calc(100vh-9rem)] max-w-7xl px-4 py-8 sm:px-6 lg:px-8">

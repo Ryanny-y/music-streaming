@@ -18,7 +18,13 @@ const router = createBrowserRouter([
     children: [
       {
         element: <UserLayout />,
-        children: userRoutes,
+        children: [
+          {
+            index: true,
+            element: <Navigate to="dashboard" replace />,
+          },
+          ...userRoutes,
+        ],
       },
     ],
   },
@@ -28,7 +34,13 @@ const router = createBrowserRouter([
     children: [
       {
         element: <AdminLayout />,
-        children: adminRoutes,
+        children: [
+          {
+            index: true,
+            element: <Navigate to="dashboard" replace />,
+          },
+          ...adminRoutes,
+        ],
       },
     ],
   },

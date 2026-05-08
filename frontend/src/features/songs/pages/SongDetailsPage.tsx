@@ -1,4 +1,5 @@
 import { Calendar, Clock3, Disc3, Lock, Music2 } from 'lucide-react'
+import type { ReactNode } from 'react'
 import { useEffect, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 
@@ -14,7 +15,6 @@ export function SongDetailsPage() {
 
   useEffect(() => {
     if (!songId) {
-      setIsLoading(false)
       return
     }
 
@@ -111,7 +111,7 @@ export function SongDetailsPage() {
 }
 
 type DetailProps = {
-  icon: React.ReactNode
+  icon: ReactNode
   label: string
   value: string
 }

@@ -17,7 +17,6 @@ export function CategoryFormPage({ mode }: { mode: 'create' | 'edit' }) {
 
   useEffect(() => {
     if (mode !== 'edit' || !categoryId) {
-      setIsLoading(false)
       return
     }
 

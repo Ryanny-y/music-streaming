@@ -14,7 +14,8 @@ import { NavLink, Outlet, useNavigate } from 'react-router-dom'
 import { BottomPlayer, SearchBar } from '@/components/common'
 import { Button } from '@/components/ui'
 import { useAuth } from '@/features/auth'
-import { PlaybackProvider, usePlayback } from '@/features/user/playbackContext'
+import { PlaybackProvider } from '@/features/user/playbackContext'
+import { usePlayback } from '@/features/user/usePlayback'
 import { APP_NAME } from '@/lib/constants'
 import { cn } from '@/lib/utils'
 
@@ -45,6 +46,16 @@ function UserLayoutContent() {
   const handleLogout = async () => {
     await logout()
     navigate('/login', { replace: true })
+  }
+
+  const handleSearchSubmit = () => {
+    const query = searchValue.trim()
+
+    if (query) {
+      navigate(`/app/search?q=${encodeURIComponent(query)}`)
+    } else {
+      navigate('/app/search')
+    }
   }
 
   return (
@@ -97,7 +108,16 @@ function UserLayoutContent() {
       <div className="min-h-screen pb-40 md:pl-64">
         <header className="sticky top-0 z-20 border-b border-border bg-background/80 px-4 py-4 backdrop-blur sm:px-6 lg:px-8">
           <div className="mx-auto flex max-w-6xl items-center gap-4">
-            <SearchBar value={searchValue} onChange={setSearchValue} className="max-w-xl" />
+            <SearchBar
+              value={searchValue}
+              onChange={setSearchValue}
+              onKeyDown={(event) => {
+                if (event.key === 'Enter') {
+                  handleSearchSubmit()
+                }
+              }}
+              className="max-w-xl"
+            />
             <Button className="ml-auto hidden md:inline-flex" variant="secondary" size="sm" type="button" onClick={handleLogout}>
               <LogOut className="size-4" aria-hidden="true" />
               Logout
@@ -111,15 +131,15 @@ function UserLayoutContent() {
       </div>
 
       <nav className="fixed inset-x-0 bottom-[4.75rem] z-40 border-t border-border bg-background/90 px-2 py-2 backdrop-blur md:hidden">
-        <div className="grid grid-cols-4 gap-1">
-          {sidebarLinks.slice(0, 4).map((link) => {
+        <div className="flex gap-1 overflow-x-auto pb-1">
+          {sidebarLinks.map((link) => {
             const Icon = link.icon
 
             return (
               <NavLink
                 className={({ isActive }) =>
                   cn(
-                    'flex flex-col items-center gap-1 rounded-lg px-2 py-2 text-[0.7rem] text-muted-foreground',
+                    'flex min-w-20 flex-col items-center gap-1 rounded-lg px-2 py-2 text-[0.7rem] text-muted-foreground',
                     isActive && 'bg-secondary text-foreground',
                   )
                 }

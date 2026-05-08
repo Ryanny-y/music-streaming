@@ -4,7 +4,7 @@ import { Link, useParams } from 'react-router-dom'
 
 import { EmptyState, LoadingState, LyricsViewer, MusicPlayer, PageHeader } from '@/components/common'
 import { Button } from '@/components/ui'
-import { usePlayback } from '@/features/user/playbackContext'
+import { usePlayback } from '@/features/user/usePlayback'
 import { songService } from '@/services'
 import type { Song } from '@/types'
 
@@ -16,7 +16,6 @@ export function LyricsPage() {
 
   useEffect(() => {
     if (!songId) {
-      setIsLoading(false)
       return
     }
 
