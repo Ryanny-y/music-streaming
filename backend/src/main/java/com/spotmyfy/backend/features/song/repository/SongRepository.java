@@ -43,6 +43,8 @@ public interface SongRepository extends JpaRepository<Song, UUID> {
 
 	List<Song> findByCategory(Category category);
 
+	long countByCategory(Category category);
+
 	List<Song> findByCategoryAndStatus(Category category, SongStatus status);
 
 	Page<Song> findByCategoryAndStatus(Category category, SongStatus status, Pageable pageable);
