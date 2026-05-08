@@ -3,20 +3,34 @@ import { createBrowserRouter, Navigate, RouterProvider } from 'react-router-dom'
 import { adminRoutes } from '@/features/admin'
 import { publicRoutes } from '@/features/public'
 import { userRoutes } from '@/features/user'
+import { AdminLayout, PublicLayout, UserLayout } from '@/layouts'
 import { ProtectedRoute } from '@/routes/ProtectedRoute'
 import { RoleRoute } from '@/routes/RoleRoute'
 
 const router = createBrowserRouter([
-  ...publicRoutes,
+  {
+    element: <PublicLayout />,
+    children: publicRoutes,
+  },
   {
     path: '/app',
     element: <ProtectedRoute />,
-    children: userRoutes,
+    children: [
+      {
+        element: <UserLayout />,
+        children: userRoutes,
+      },
+    ],
   },
   {
     path: '/admin',
     element: <RoleRoute allowedRole="ADMIN" />,
-    children: adminRoutes,
+    children: [
+      {
+        element: <AdminLayout />,
+        children: adminRoutes,
+      },
+    ],
   },
   {
     path: '*',
