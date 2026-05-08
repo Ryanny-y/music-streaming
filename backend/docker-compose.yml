@@ -1,0 +1,23 @@
+name: spotmyfy
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: spotmyfy-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: spotmyfy
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - spotmyfy_postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d spotmyfy"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  spotmyfy_postgres_data:

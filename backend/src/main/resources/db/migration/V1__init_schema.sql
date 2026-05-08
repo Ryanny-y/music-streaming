@@ -1,56 +1,110 @@
-create table app_users (
-    id bigserial primary key,
-    email varchar(255) not null unique,
-    display_name varchar(120) not null,
+create extension if not exists pgcrypto;
+
+create table roles (
+    role_id bigserial primary key,
+    role_name varchar(50) not null unique
+);
+
+create table users (
+    user_id uuid primary key default gen_random_uuid(),
+    full_name varchar(150) not null,
+    username varchar(80) not null unique,
+    email varchar(150) not null unique,
     password_hash varchar(255) not null,
-    role varchar(40) not null,
-    created_at timestamptz not null default now(),
-    updated_at timestamptz not null default now()
+    role_id bigint not null references roles(role_id),
+    is_active boolean default true,
+    refresh_token text,
+    refresh_token_exp timestamp,
+    created_at timestamp default current_timestamp,
+    updated_at timestamp default current_timestamp
 );
 
 create table categories (
-    id bigserial primary key,
-    name varchar(120) not null unique,
-    slug varchar(140) not null unique,
-    created_at timestamptz not null default now()
+    category_id uuid primary key default gen_random_uuid(),
+    name varchar(100) not null unique,
+    description text,
+    created_at timestamp default current_timestamp,
+    updated_at timestamp default current_timestamp
 );
 
 create table tags (
-    id bigserial primary key,
-    name varchar(120) not null unique,
-    slug varchar(140) not null unique,
-    created_at timestamptz not null default now()
+    tag_id uuid primary key default gen_random_uuid(),
+    name varchar(100) not null unique,
+    created_at timestamp default current_timestamp,
+    updated_at timestamp default current_timestamp
 );
 
 create table songs (
-    id bigserial primary key,
-    title varchar(255) not null,
-    artist_name varchar(255) not null,
-    album_name varchar(255),
-    duration_seconds integer not null,
-    audio_url text not null,
-    cover_art_url text,
-    category_id bigint references categories(id),
-    created_at timestamptz not null default now(),
-    updated_at timestamptz not null default now()
+    song_id uuid primary key default gen_random_uuid(),
+    title varchar(150) not null,
+    artist varchar(150) not null,
+    album varchar(150),
+    description text,
+    lyrics text,
+    audio_url text,
+    cover_image_url text,
+    duration varchar(20),
+    release_date date,
+    category_id uuid references categories(category_id),
+    status varchar(30) not null default 'UNPUBLISHED',
+    play_count bigint default 0,
+    created_at timestamp default current_timestamp,
+    updated_at timestamp default current_timestamp
 );
 
 create table song_tags (
-    song_id bigint not null references songs(id) on delete cascade,
-    tag_id bigint not null references tags(id) on delete cascade,
+    song_id uuid not null references songs(song_id) on delete cascade,
+    tag_id uuid not null references tags(tag_id) on delete cascade,
     primary key (song_id, tag_id)
 );
 
 create table favorites (
-    user_id bigint not null references app_users(id) on delete cascade,
-    song_id bigint not null references songs(id) on delete cascade,
-    created_at timestamptz not null default now(),
-    primary key (user_id, song_id)
+    favorite_id uuid primary key default gen_random_uuid(),
+    user_id uuid not null references users(user_id) on delete cascade,
+    song_id uuid not null references songs(song_id) on delete cascade,
+    created_at timestamp default current_timestamp,
+    unique (user_id, song_id)
 );
 
 create table listening_history (
-    id bigserial primary key,
-    user_id bigint not null references app_users(id) on delete cascade,
-    song_id bigint not null references songs(id) on delete cascade,
-    listened_at timestamptz not null default now()
+    history_id uuid primary key default gen_random_uuid(),
+    user_id uuid not null references users(user_id) on delete cascade,
+    song_id uuid not null references songs(song_id) on delete cascade,
+    played_at timestamp default current_timestamp
 );
+
+create index idx_users_role_id on users(role_id);
+create index idx_users_is_active on users(is_active);
+create index idx_users_username_lower on users(lower(username));
+create index idx_users_email_lower on users(lower(email));
+
+create index idx_categories_name_lower on categories(lower(name));
+
+create index idx_tags_name_lower on tags(lower(name));
+
+create index idx_songs_category_id on songs(category_id);
+create index idx_songs_status on songs(status);
+create index idx_songs_release_date on songs(release_date);
+create index idx_songs_play_count on songs(play_count desc);
+create index idx_songs_title_lower on songs(lower(title));
+create index idx_songs_artist_lower on songs(lower(artist));
+create index idx_songs_album_lower on songs(lower(album));
+create index idx_songs_search_text on songs using gin (
+    to_tsvector(
+        'simple',
+        coalesce(title, '') || ' ' ||
+        coalesce(artist, '') || ' ' ||
+        coalesce(album, '') || ' ' ||
+        coalesce(description, '')
+    )
+);
+
+create index idx_song_tags_tag_id on song_tags(tag_id);
+
+create index idx_favorites_user_id on favorites(user_id);
+create index idx_favorites_song_id on favorites(song_id);
+create index idx_favorites_created_at on favorites(created_at);
+
+create index idx_listening_history_user_played_at on listening_history(user_id, played_at desc);
+create index idx_listening_history_song_id on listening_history(song_id);
+create index idx_listening_history_played_at on listening_history(played_at desc);

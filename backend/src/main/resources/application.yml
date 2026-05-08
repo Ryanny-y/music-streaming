@@ -1,10 +1,10 @@
 spring:
   application:
-    name: music-stream-backend
+    name: spotmyfy-backend
   datasource:
-    url: ${DB_URL:jdbc:postgresql://localhost:5432/music_stream}
-    username: ${DB_USERNAME:postgres}
-    password: ${DB_PASSWORD:postgres}
+    url: jdbc:postgresql://localhost:5432/spotmyfy
+    username: postgres
+    password: postgres
     driver-class-name: org.postgresql.Driver
   jpa:
     hibernate:
@@ -21,9 +21,9 @@ spring:
     baseline-on-migrate: true
 
 server:
-  port: ${SERVER_PORT:8080}
+  port: 8080
 
 app:
   jwt:
-    secret: ${JWT_SECRET:change-this-development-secret-to-at-least-32-chars}
-    expiration-minutes: ${JWT_EXPIRATION_MINUTES:60}
+    secret: 9f4c7d2a1b8e6f3c5d0a7e9b1c4f6a8d2e5f7c9b0a1d3e6f8c2b4a7d9e1f5c3
+    expiration-minutes: 60
