@@ -38,6 +38,7 @@ public class SecurityConfig {
 						.requestMatchers("/api/auth/**").permitAll()
 						.requestMatchers("/api/v1/auth/**").permitAll()
 						.requestMatchers("/api/public/**").permitAll()
+						.requestMatchers(HttpMethod.GET, "/api/files/covers/**").permitAll()
 						.requestMatchers("/api/users/**").hasAnyRole("USER", "ADMIN")
 						.requestMatchers("/api/songs/**").hasAnyRole("USER", "ADMIN")
 						.requestMatchers("/api/admin/**").hasRole("ADMIN")
