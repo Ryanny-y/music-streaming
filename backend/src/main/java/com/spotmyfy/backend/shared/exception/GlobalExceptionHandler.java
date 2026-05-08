@@ -8,10 +8,12 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authentication.DisabledException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.server.ResponseStatusException;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
@@ -48,6 +50,17 @@ public class GlobalExceptionHandler {
 	@ExceptionHandler(BadCredentialsException.class)
 	public ResponseEntity<ErrorResponse> handleBadCredentials(BadCredentialsException ex, HttpServletRequest request) {
 		return build(HttpStatus.UNAUTHORIZED, "Invalid credentials", ex.getMessage(), request);
+	}
+
+	@ExceptionHandler(DisabledException.class)
+	public ResponseEntity<ErrorResponse> handleDisabled(DisabledException ex, HttpServletRequest request) {
+		return build(HttpStatus.FORBIDDEN, "Account disabled", ex.getMessage(), request);
+	}
+
+	@ExceptionHandler(ResponseStatusException.class)
+	public ResponseEntity<ErrorResponse> handleResponseStatus(ResponseStatusException ex, HttpServletRequest request) {
+		HttpStatus status = HttpStatus.valueOf(ex.getStatusCode().value());
+		return build(status, status.getReasonPhrase(), ex.getReason(), request);
 	}
 
 	@ExceptionHandler(AccessDeniedException.class)

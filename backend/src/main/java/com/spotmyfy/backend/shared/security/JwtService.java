@@ -1,6 +1,7 @@
 package com.spotmyfy.backend.shared.security;
 
 import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.security.Keys;
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;
@@ -35,6 +36,18 @@ public class JwtService {
 				.parseSignedClaims(token)
 				.getPayload()
 				.getSubject();
+	}
+
+	public boolean isTokenValid(String token) {
+		try {
+			Jwts.parser()
+					.verifyWith(signingKey())
+					.build()
+					.parseSignedClaims(token);
+			return true;
+		} catch (JwtException | IllegalArgumentException ex) {
+			return false;
+		}
 	}
 
 	private SecretKey signingKey() {
