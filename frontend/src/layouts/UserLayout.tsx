@@ -14,6 +14,7 @@ import { NavLink, Outlet, useNavigate } from 'react-router-dom'
 import { BottomPlayer, SearchBar } from '@/components/common'
 import { Button } from '@/components/ui'
 import { useAuth } from '@/features/auth'
+import { PlaybackProvider, usePlayback } from '@/features/user/playbackContext'
 import { APP_NAME } from '@/lib/constants'
 import { cn } from '@/lib/utils'
 
@@ -28,8 +29,17 @@ const sidebarLinks = [
 ]
 
 export function UserLayout() {
+  return (
+    <PlaybackProvider>
+      <UserLayoutContent />
+    </PlaybackProvider>
+  )
+}
+
+function UserLayoutContent() {
   const [searchValue, setSearchValue] = useState('')
   const { logout, user } = useAuth()
+  const { currentSong, isPlaying, togglePlayback } = usePlayback()
   const navigate = useNavigate()
 
   const handleLogout = async () => {
@@ -124,7 +134,7 @@ export function UserLayout() {
         </div>
       </nav>
 
-      <BottomPlayer />
+      <BottomPlayer song={currentSong} isPlaying={isPlaying} onPlayPause={togglePlayback} />
     </div>
   )
 }
