@@ -1,5 +1,5 @@
-import { PlaceholderPage } from '@/components/common'
+import { TagFormPage } from './TagFormPage'
 
 export function NewTagPage() {
-  return <PlaceholderPage title="New Tag" section="Admin" />
+  return <TagFormPage mode="create" />
 }

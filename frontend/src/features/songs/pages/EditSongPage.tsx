@@ -1,5 +1,5 @@
-import { PlaceholderPage } from '@/components/common'
+import { SongFormPage } from './SongFormPage'
 
 export function EditSongPage() {
-  return <PlaceholderPage title="Edit Song" section="Admin" />
+  return <SongFormPage mode="edit" />
 }

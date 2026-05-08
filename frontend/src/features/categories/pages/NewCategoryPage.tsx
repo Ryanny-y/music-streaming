@@ -1,5 +1,5 @@
-import { PlaceholderPage } from '@/components/common'
+import { CategoryFormPage } from './CategoryFormPage'
 
 export function NewCategoryPage() {
-  return <PlaceholderPage title="New Category" section="Admin" />
+  return <CategoryFormPage mode="create" />
 }

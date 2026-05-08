@@ -1,5 +1,5 @@
-import { PlaceholderPage } from '@/components/common'
+import { SongFormPage } from './SongFormPage'
 
 export function NewSongPage() {
-  return <PlaceholderPage title="New Song" section="Admin" />
+  return <SongFormPage mode="create" />
 }
