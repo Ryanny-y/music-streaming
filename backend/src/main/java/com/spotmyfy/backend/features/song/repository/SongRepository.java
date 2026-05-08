@@ -19,6 +19,10 @@ public interface SongRepository extends JpaRepository<Song, UUID> {
 
 	Page<Song> findByStatus(SongStatus status, Pageable pageable);
 
+	long countByStatus(SongStatus status);
+
+	List<Song> findAllByOrderByCreatedAtDesc(Pageable pageable);
+
 	Optional<Song> findBySongIdAndStatus(UUID songId, SongStatus status);
 
 	default Optional<Song> findByIdAndStatus(UUID songId, SongStatus status) {
