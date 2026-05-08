@@ -1,0 +1,7 @@
+export { AdminSongsPage } from './pages/AdminSongsPage'
+export { AppSongDetailsPage } from './pages/AppSongDetailsPage'
+export { EditSongPage } from './pages/EditSongPage'
+export { LyricsPage } from './pages/LyricsPage'
+export { NewSongPage } from './pages/NewSongPage'
+export { SongDetailsPage } from './pages/SongDetailsPage'
+export { SongsPage } from './pages/SongsPage'

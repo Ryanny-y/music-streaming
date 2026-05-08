@@ -1,0 +1,7 @@
+export { userRoutes } from './routes'
+export { DashboardPage } from './pages/DashboardPage'
+export { FavoritesPage } from './pages/FavoritesPage'
+export { HistoryPage } from './pages/HistoryPage'
+export { LibraryPage } from './pages/LibraryPage'
+export { ProfilePage } from './pages/ProfilePage'
+export { SearchPage } from './pages/SearchPage'

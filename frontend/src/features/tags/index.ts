@@ -1,0 +1,6 @@
+export { AdminTagsPage } from './pages/AdminTagsPage'
+export { AppTagsPage } from './pages/AppTagsPage'
+export { EditTagPage } from './pages/EditTagPage'
+export { NewTagPage } from './pages/NewTagPage'
+export { TagDetailsPage } from './pages/TagDetailsPage'
+export { TagsPage } from './pages/TagsPage'

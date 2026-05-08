@@ -1,0 +1,6 @@
+export { AdminCategoriesPage } from './pages/AdminCategoriesPage'
+export { AppCategoriesPage } from './pages/AppCategoriesPage'
+export { CategoriesPage } from './pages/CategoriesPage'
+export { CategoryDetailsPage } from './pages/CategoryDetailsPage'
+export { EditCategoryPage } from './pages/EditCategoryPage'
+export { NewCategoryPage } from './pages/NewCategoryPage'
