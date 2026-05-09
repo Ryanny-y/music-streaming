@@ -20,6 +20,8 @@ export type Song = {
   tags: string[]
   status: SongStatus
   playCount: number
+  createdAt?: string
+  updatedAt?: string
 }
 
 export type User = {
@@ -37,6 +39,8 @@ export type Category = {
   name: string
   description: string
   songCount: number
+  createdAt?: string
+  updatedAt?: string
 }
 
 export type Tag = {

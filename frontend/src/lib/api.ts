@@ -35,7 +35,7 @@ function redirectToLogin(): void {
   window.location.assign('/login')
 }
 
-export function unwrapResponse<T>(response: AxiosResponse<T | WrappedResponse<T>>): T | WrappedResponse<T> {
+export function unwrapResponse<T>(response: AxiosResponse<T | WrappedResponse<T>>): T {
   const responseData = response.data
 
   if (
@@ -47,7 +47,7 @@ export function unwrapResponse<T>(response: AxiosResponse<T | WrappedResponse<T>
     return responseData.data
   }
 
-  return responseData
+  return responseData as T
 }
 
 api.interceptors.request.use((config) => {
