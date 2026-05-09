@@ -1,7 +1,5 @@
 import type { RouteObject } from 'react-router-dom'
 
-import { AppTagsPage, TagDetailsPage } from '@/features/tags'
-
 import { CategoriesPage } from './pages/CategoriesPage'
 import { CategorySongsPage } from './pages/CategorySongsPage'
 import { DashboardPage } from './pages/DashboardPage'
@@ -12,6 +10,8 @@ import { LyricsPage } from './pages/LyricsPage'
 import { ProfilePage } from './pages/ProfilePage'
 import { SearchPage } from './pages/SearchPage'
 import { SongDetailsPage } from './pages/SongDetailsPage'
+import { TagsPage } from './pages/TagsPage'
+import { TagSongsPage } from './pages/TagSongsPage'
 
 export const userRoutes: RouteObject[] = [
   {
@@ -48,11 +48,11 @@ export const userRoutes: RouteObject[] = [
   },
   {
     path: 'tags',
-    element: <AppTagsPage />,
+    element: <TagsPage />,
   },
   {
     path: 'tags/:tagId',
-    element: <TagDetailsPage />,
+    element: <TagSongsPage />,
   },
   {
     path: 'search',

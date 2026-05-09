@@ -6,16 +6,46 @@ import { EmptyState, LoadingState, PageHeader } from '@/components/common'
 import { tagService } from '@/services'
 import type { Tag } from '@/types'
 
+function getErrorMessage(error: unknown): string {
+  return error instanceof Error ? error.message : 'Unable to load tags right now.'
+}
+
 export function AppTagsPage() {
   const [tags, setTags] = useState<Tag[]>([])
   const [isLoading, setIsLoading] = useState(true)
+  const [errorMessage, setErrorMessage] = useState<string | null>(null)
   const navigate = useNavigate()
 
   useEffect(() => {
+    let isMounted = true
+
+    setIsLoading(true)
+    setErrorMessage(null)
+
     tagService
       .getTags()
-      .then(setTags)
-      .finally(() => setIsLoading(false))
+      .then((tagList) => {
+        if (isMounted) {
+          setTags(tagList)
+        }
+      })
+      .catch((error: unknown) => {
+        if (!isMounted) {
+          return
+        }
+
+        setTags([])
+        setErrorMessage(getErrorMessage(error))
+      })
+      .finally(() => {
+        if (isMounted) {
+          setIsLoading(false)
+        }
+      })
+
+    return () => {
+      isMounted = false
+    }
   }, [])
 
   return (
@@ -24,6 +54,8 @@ export function AppTagsPage() {
 
       {isLoading ? (
         <LoadingState label="Loading tags" />
+      ) : errorMessage ? (
+        <EmptyState title="Could not load tags" description={errorMessage} />
       ) : tags.length === 0 ? (
         <EmptyState title="No tags found" description="Tags will appear here once added." />
       ) : (

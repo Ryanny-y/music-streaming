@@ -6,30 +6,67 @@ import { usePlayback } from '@/features/user/usePlayback'
 import { songService, tagService } from '@/services'
 import type { Song, Tag } from '@/types'
 
+function getErrorMessage(error: unknown): string {
+  return error instanceof Error ? error.message : 'Unable to load tag songs right now.'
+}
+
 export function TagDetailsPage() {
   const { tagId } = useParams()
   const [tag, setTag] = useState<Tag | null>(null)
   const [songs, setSongs] = useState<Song[]>([])
   const [isLoading, setIsLoading] = useState(true)
+  const [errorMessage, setErrorMessage] = useState<string | null>(null)
   const { playSong } = usePlayback()
   const navigate = useNavigate()
 
   useEffect(() => {
+    let isMounted = true
+
     if (!tagId) {
+      setTag(null)
+      setSongs([])
+      setIsLoading(false)
       return
     }
 
-    tagService
-      .getTagById(tagId)
-      .then(async (tagDetails) => {
+    setIsLoading(true)
+    setErrorMessage(null)
+
+    Promise.all([tagService.getTagById(tagId), songService.getSongsByTag(tagId)])
+      .then(([tagDetails, tagSongs]) => {
+        if (!isMounted) {
+          return
+        }
+
         setTag(tagDetails)
-        setSongs(tagDetails ? await songService.getSongsByTag(tagDetails.name) : [])
+        setSongs(tagSongs)
       })
-      .finally(() => setIsLoading(false))
+      .catch((error: unknown) => {
+        if (!isMounted) {
+          return
+        }
+
+        setTag(null)
+        setSongs([])
+        setErrorMessage(getErrorMessage(error))
+      })
+      .finally(() => {
+        if (isMounted) {
+          setIsLoading(false)
+        }
+      })
+
+    return () => {
+      isMounted = false
+    }
   }, [tagId])
 
   if (isLoading) {
     return <LoadingState label="Loading tag" />
+  }
+
+  if (errorMessage) {
+    return <EmptyState title="Could not load tag" description={errorMessage} />
   }
 
   if (!tag) {
@@ -55,7 +92,12 @@ export function TagDetailsPage() {
               />
             ))}
           </div>
-          <SongList songs={songs} showFavorite onPlay={playSong} />
+          <SongList
+            songs={songs}
+            showFavorite
+            onPlay={playSong}
+            onOpen={(song) => navigate(`/app/songs/${song.id}`)}
+          />
         </>
       )}
     </div>
