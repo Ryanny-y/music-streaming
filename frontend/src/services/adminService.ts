@@ -1,13 +1,21 @@
-import { categories, songs, tags } from '@/mocks/musicData'
+import { categories, tags } from '@/mocks/musicData'
 import {
   getAdminDashboard as getBackendAdminDashboard,
+  createSong as createBackendSong,
   deleteSong as deleteBackendSong,
+  getCategories as getBackendCategories,
+  getSongById as getBackendSongById,
   getSongs as getBackendSongs,
+  getTags as getBackendTags,
   getUserById as getBackendUserById,
   getUsers as getBackendUsers,
+  updateSong as updateBackendSong,
   updateSongStatus as updateBackendSongStatus,
   updateUserRole as updateBackendUserRole,
   updateUserStatus as updateBackendUserStatus,
+  uploadSongAudio as uploadBackendSongAudio,
+  uploadSongCover as uploadBackendSongCover,
+  type AdminSongPayload,
 } from '@/features/admin/services/adminService'
 import type {
   AdminDashboard,
@@ -15,7 +23,6 @@ import type {
   Category,
   CategoryPayload,
   Song,
-  SongPayload,
   SongStatus,
   Tag,
   TagPayload,
@@ -48,24 +55,16 @@ export async function getSongs(): Promise<Song[]> {
   return getBackendSongs()
 }
 
-export async function createSong(payload: SongPayload): Promise<Song> {
-  const song: Song = {
-    ...payload,
-    id: `song-${Date.now()}`,
-    playCount: 0,
-  }
-
-  songs.unshift(song)
-
-  return mockMutate(song)
+export async function getSongById(songId: string): Promise<Song> {
+  return getBackendSongById(songId)
 }
 
-export async function updateSong(songId: string, payload: Partial<SongPayload>): Promise<Song> {
-  const song = findSong(songId)
+export async function createSong(payload: AdminSongPayload): Promise<Song> {
+  return createBackendSong(payload)
+}
 
-  Object.assign(song, payload)
-
-  return mockMutate(song)
+export async function updateSong(songId: string, payload: AdminSongPayload): Promise<Song> {
+  return updateBackendSong(songId, payload)
 }
 
 export async function deleteSong(songId: string): Promise<void> {
@@ -76,8 +75,16 @@ export async function updateSongStatus(songId: string, status: SongStatus): Prom
   return updateBackendSongStatus(songId, status)
 }
 
+export async function uploadSongAudio(songId: string, file: File): Promise<Song> {
+  return uploadBackendSongAudio(songId, file)
+}
+
+export async function uploadSongCover(songId: string, file: File): Promise<Song> {
+  return uploadBackendSongCover(songId, file)
+}
+
 export async function getCategories(): Promise<Category[]> {
-  return mockResolve(categories)
+  return getBackendCategories()
 }
 
 export async function createCategory(payload: CategoryPayload): Promise<Category> {
@@ -107,7 +114,7 @@ export async function deleteCategory(categoryId: string): Promise<void> {
 }
 
 export async function getTags(): Promise<Tag[]> {
-  return mockResolve(tags)
+  return getBackendTags()
 }
 
 export async function createTag(payload: TagPayload): Promise<Tag> {
@@ -134,16 +141,6 @@ export async function deleteTag(tagId: string): Promise<void> {
   removeById(tags, tagId)
 
   return mockResolve(undefined)
-}
-
-function findSong(songId: string): Song {
-  const song = songs.find((item) => item.id === songId)
-
-  if (!song) {
-    throw new Error('Song not found')
-  }
-
-  return song
 }
 
 function findCategory(categoryId: string): Category {

@@ -1,5 +1,18 @@
 import { api, unwrapResponse } from '@/lib/api'
-import type { AdminDashboard, ApiUserRole, Song, SongStatus, User } from '@/types'
+import type { AdminDashboard, ApiUserRole, Category, Song, SongStatus, Tag, User } from '@/types'
+
+export type AdminSongPayload = {
+  title: string
+  artist: string
+  album: string
+  description: string
+  lyrics: string
+  duration: string
+  releaseDate: string
+  categoryId: string
+  tagIds: string[]
+  status: SongStatus
+}
 
 type AdminSongResponse = {
   songId: string
@@ -38,6 +51,23 @@ type AdminUserResponse = {
   role: ApiUserRole
   active: boolean
   createdAt: string
+  updatedAt?: string | null
+}
+
+type AdminCategoryResponse = {
+  categoryId: string
+  name: string
+  description?: string | null
+  songCount?: number | null
+  createdAt?: string | null
+  updatedAt?: string | null
+}
+
+type AdminTagResponse = {
+  tagId: string
+  name: string
+  songCount?: number | null
+  createdAt?: string | null
   updatedAt?: string | null
 }
 
@@ -90,6 +120,25 @@ function normalizeUser(user: AdminUserResponse): User {
     role: user.role,
     isActive: user.active,
     createdAt: user.createdAt,
+  }
+}
+
+function normalizeCategory(category: AdminCategoryResponse): Category {
+  return {
+    id: category.categoryId,
+    name: category.name,
+    description: category.description ?? '',
+    songCount: category.songCount ?? 0,
+    createdAt: category.createdAt ?? undefined,
+    updatedAt: category.updatedAt ?? undefined,
+  }
+}
+
+function normalizeTag(tag: AdminTagResponse): Tag {
+  return {
+    id: tag.tagId,
+    name: tag.name,
+    songCount: tag.songCount ?? 0,
   }
 }
 
@@ -148,6 +197,27 @@ export async function getSongs(): Promise<Song[]> {
   return unwrapPage(payload).map(normalizeSong)
 }
 
+export async function getSongById(songId: string): Promise<Song> {
+  const response = await api.get<AdminSongResponse>(`/admin/songs/${songId}`)
+  const song = unwrapResponse<AdminSongResponse>(response)
+
+  return normalizeSong(song)
+}
+
+export async function createSong(payload: AdminSongPayload): Promise<Song> {
+  const response = await api.post<AdminSongResponse>('/admin/songs', payload)
+  const song = unwrapResponse<AdminSongResponse>(response)
+
+  return normalizeSong(song)
+}
+
+export async function updateSong(songId: string, payload: AdminSongPayload): Promise<Song> {
+  const response = await api.put<AdminSongResponse>(`/admin/songs/${songId}`, payload)
+  const song = unwrapResponse<AdminSongResponse>(response)
+
+  return normalizeSong(song)
+}
+
 export async function deleteSong(songId: string): Promise<void> {
   await api.delete(`/admin/songs/${songId}`)
 }
@@ -157,4 +227,38 @@ export async function updateSongStatus(songId: string, status: SongStatus): Prom
   const song = unwrapResponse<AdminSongResponse>(response)
 
   return normalizeSong(song)
+}
+
+export async function uploadSongAudio(songId: string, file: File): Promise<Song> {
+  const formData = new FormData()
+  formData.append('file', file)
+
+  const response = await api.post<AdminSongResponse>(`/admin/songs/${songId}/audio`, formData)
+  const song = unwrapResponse<AdminSongResponse>(response)
+
+  return normalizeSong(song)
+}
+
+export async function uploadSongCover(songId: string, file: File): Promise<Song> {
+  const formData = new FormData()
+  formData.append('file', file)
+
+  const response = await api.post<AdminSongResponse>(`/admin/songs/${songId}/cover`, formData)
+  const song = unwrapResponse<AdminSongResponse>(response)
+
+  return normalizeSong(song)
+}
+
+export async function getCategories(): Promise<Category[]> {
+  const response = await api.get<PageResponse<AdminCategoryResponse>>('/admin/categories')
+  const payload = unwrapResponse<PageResponse<AdminCategoryResponse>>(response)
+
+  return unwrapPage(payload).map(normalizeCategory)
+}
+
+export async function getTags(): Promise<Tag[]> {
+  const response = await api.get<PageResponse<AdminTagResponse>>('/admin/tags')
+  const payload = unwrapResponse<PageResponse<AdminTagResponse>>(response)
+
+  return unwrapPage(payload).map(normalizeTag)
 }
