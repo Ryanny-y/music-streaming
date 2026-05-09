@@ -1,9 +1,12 @@
-import { categories, tags } from '@/mocks/musicData'
+import { tags } from '@/mocks/musicData'
 import {
   getAdminDashboard as getBackendAdminDashboard,
   createSong as createBackendSong,
+  createCategory as createBackendCategory,
+  deleteCategory as deleteBackendCategory,
   deleteSong as deleteBackendSong,
   getCategories as getBackendCategories,
+  getCategoryById as getBackendCategoryById,
   getSongById as getBackendSongById,
   getSongs as getBackendSongs,
   getTags as getBackendTags,
@@ -11,17 +14,18 @@ import {
   getUsers as getBackendUsers,
   updateSong as updateBackendSong,
   updateSongStatus as updateBackendSongStatus,
+  updateCategory as updateBackendCategory,
   updateUserRole as updateBackendUserRole,
   updateUserStatus as updateBackendUserStatus,
   uploadSongAudio as uploadBackendSongAudio,
   uploadSongCover as uploadBackendSongCover,
   type AdminSongPayload,
+  type AdminCategoryPayload,
 } from '@/features/admin/services/adminService'
 import type {
   AdminDashboard,
   ApiUserRole,
   Category,
-  CategoryPayload,
   Song,
   SongStatus,
   Tag,
@@ -87,30 +91,20 @@ export async function getCategories(): Promise<Category[]> {
   return getBackendCategories()
 }
 
-export async function createCategory(payload: CategoryPayload): Promise<Category> {
-  const category: Category = {
-    ...payload,
-    id: `cat-${Date.now()}`,
-    songCount: 0,
-  }
-
-  categories.push(category)
-
-  return mockMutate(category)
+export async function getCategoryById(categoryId: string): Promise<Category> {
+  return getBackendCategoryById(categoryId)
 }
 
-export async function updateCategory(categoryId: string, payload: Partial<CategoryPayload>): Promise<Category> {
-  const category = findCategory(categoryId)
+export async function createCategory(payload: AdminCategoryPayload): Promise<Category> {
+  return createBackendCategory(payload)
+}
 
-  Object.assign(category, payload)
-
-  return mockMutate(category)
+export async function updateCategory(categoryId: string, payload: AdminCategoryPayload): Promise<Category> {
+  return updateBackendCategory(categoryId, payload)
 }
 
 export async function deleteCategory(categoryId: string): Promise<void> {
-  removeById(categories, categoryId)
-
-  return mockResolve(undefined)
+  return deleteBackendCategory(categoryId)
 }
 
 export async function getTags(): Promise<Tag[]> {
@@ -141,16 +135,6 @@ export async function deleteTag(tagId: string): Promise<void> {
   removeById(tags, tagId)
 
   return mockResolve(undefined)
-}
-
-function findCategory(categoryId: string): Category {
-  const category = categories.find((item) => item.id === categoryId)
-
-  if (!category) {
-    throw new Error('Category not found')
-  }
-
-  return category
 }
 
 function findTag(tagId: string): Tag {

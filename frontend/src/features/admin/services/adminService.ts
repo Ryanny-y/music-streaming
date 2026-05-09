@@ -14,6 +14,11 @@ export type AdminSongPayload = {
   status: SongStatus
 }
 
+export type AdminCategoryPayload = {
+  name: string
+  description: string
+}
+
 type AdminSongResponse = {
   songId: string
   title: string
@@ -254,6 +259,31 @@ export async function getCategories(): Promise<Category[]> {
   const payload = unwrapResponse<PageResponse<AdminCategoryResponse>>(response)
 
   return unwrapPage(payload).map(normalizeCategory)
+}
+
+export async function getCategoryById(categoryId: string): Promise<Category> {
+  const response = await api.get<AdminCategoryResponse>(`/admin/categories/${categoryId}`)
+  const category = unwrapResponse<AdminCategoryResponse>(response)
+
+  return normalizeCategory(category)
+}
+
+export async function createCategory(payload: AdminCategoryPayload): Promise<Category> {
+  const response = await api.post<AdminCategoryResponse>('/admin/categories', payload)
+  const category = unwrapResponse<AdminCategoryResponse>(response)
+
+  return normalizeCategory(category)
+}
+
+export async function updateCategory(categoryId: string, payload: AdminCategoryPayload): Promise<Category> {
+  const response = await api.put<AdminCategoryResponse>(`/admin/categories/${categoryId}`, payload)
+  const category = unwrapResponse<AdminCategoryResponse>(response)
+
+  return normalizeCategory(category)
+}
+
+export async function deleteCategory(categoryId: string): Promise<void> {
+  await api.delete(`/admin/categories/${categoryId}`)
 }
 
 export async function getTags(): Promise<Tag[]> {

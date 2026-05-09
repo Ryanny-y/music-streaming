@@ -1,5 +1,7 @@
 export { adminRoutes } from './routes'
 export { AdminDashboardPage } from './pages/AdminDashboardPage'
+export { CategoryFormPage } from './pages/CategoryFormPage'
+export { ManageCategoriesPage } from './pages/ManageCategoriesPage'
 export { ManageSongsPage } from './pages/ManageSongsPage'
 export { ManageUsersPage } from './pages/ManageUsersPage'
 export { UsersPage } from './pages/UsersPage'
