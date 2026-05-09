@@ -5,7 +5,7 @@ import { AdminSongsPage, EditSongPage, NewSongPage } from '@/features/songs'
 import { AdminTagsPage, EditTagPage, NewTagPage } from '@/features/tags'
 
 import { AdminDashboardPage } from './pages/AdminDashboardPage'
-import { UsersPage } from './pages/UsersPage'
+import { ManageUsersPage } from './pages/ManageUsersPage'
 
 export const adminRoutes: RouteObject[] = [
   {
@@ -14,7 +14,7 @@ export const adminRoutes: RouteObject[] = [
   },
   {
     path: 'users',
-    element: <UsersPage />,
+    element: <ManageUsersPage />,
   },
   {
     path: 'songs',

@@ -1,5 +1,5 @@
 import { api, unwrapResponse } from '@/lib/api'
-import type { AdminDashboard, Song } from '@/types'
+import type { AdminDashboard, ApiUserRole, Song, User } from '@/types'
 
 type AdminSongResponse = {
   songId: string
@@ -24,6 +24,21 @@ type AdminSongResponse = {
 type AdminDashboardResponse = Omit<AdminDashboard, 'mostPlayedSongs' | 'recentlyUploadedSongs'> & {
   mostPlayedSongs?: AdminSongResponse[]
   recentlyUploadedSongs?: AdminSongResponse[]
+}
+
+type PageResponse<T> = {
+  content: T[]
+}
+
+type AdminUserResponse = {
+  userId: string
+  fullName: string
+  username: string
+  email: string
+  role: ApiUserRole
+  active: boolean
+  createdAt: string
+  updatedAt?: string | null
 }
 
 function normalizeDuration(duration: AdminSongResponse['duration']): number {
@@ -66,6 +81,22 @@ function normalizeSong(song: AdminSongResponse): Song {
   }
 }
 
+function normalizeUser(user: AdminUserResponse): User {
+  return {
+    id: user.userId,
+    fullName: user.fullName,
+    username: user.username,
+    email: user.email,
+    role: user.role,
+    isActive: user.active,
+    createdAt: user.createdAt,
+  }
+}
+
+function unwrapPage<T>(payload: PageResponse<T> | T[]): T[] {
+  return Array.isArray(payload) ? payload : payload.content
+}
+
 export async function getAdminDashboard(): Promise<AdminDashboard> {
   const response = await api.get<AdminDashboardResponse>('/admin/dashboard')
   const dashboard = unwrapResponse<AdminDashboardResponse>(response)
@@ -77,4 +108,35 @@ export async function getAdminDashboard(): Promise<AdminDashboard> {
     mostPlayedSongs: mostPlayedSongs.map(normalizeSong),
     recentlyUploadedSongs: recentlyUploadedSongs.map(normalizeSong),
   }
+}
+
+export async function getUsers(): Promise<User[]> {
+  const response = await api.get<PageResponse<AdminUserResponse>>('/admin/users')
+  const payload = unwrapResponse<PageResponse<AdminUserResponse>>(response)
+
+  return unwrapPage(payload).map(normalizeUser)
+}
+
+export async function getUserById(userId: string): Promise<User> {
+  const response = await api.get<AdminUserResponse>(`/admin/users/${userId}`)
+  const user = unwrapResponse<AdminUserResponse>(response)
+
+  return normalizeUser(user)
+}
+
+export async function updateUserStatus(userId: string, isActive: boolean): Promise<User> {
+  const response = await api.patch<AdminUserResponse>(`/admin/users/${userId}/status`, {
+    active: isActive,
+    isActive,
+  })
+  const user = unwrapResponse<AdminUserResponse>(response)
+
+  return normalizeUser(user)
+}
+
+export async function updateUserRole(userId: string, role: ApiUserRole): Promise<User> {
+  const response = await api.patch<AdminUserResponse>(`/admin/users/${userId}/role`, { role })
+  const user = unwrapResponse<AdminUserResponse>(response)
+
+  return normalizeUser(user)
 }

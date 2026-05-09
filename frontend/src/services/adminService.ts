@@ -1,5 +1,11 @@
-import { categories, favorites, listeningHistory, songs, tags, users } from '@/mocks/musicData'
-import { getAdminDashboard as getBackendAdminDashboard } from '@/features/admin/services/adminService'
+import { categories, favorites, listeningHistory, songs, tags } from '@/mocks/musicData'
+import {
+  getAdminDashboard as getBackendAdminDashboard,
+  getUserById as getBackendUserById,
+  getUsers as getBackendUsers,
+  updateUserRole as updateBackendUserRole,
+  updateUserStatus as updateBackendUserStatus,
+} from '@/features/admin/services/adminService'
 import type {
   AdminDashboard,
   ApiUserRole,
@@ -20,21 +26,19 @@ export async function getAdminDashboard(): Promise<AdminDashboard> {
 }
 
 export async function getUsers(): Promise<User[]> {
-  return mockResolve(users)
+  return getBackendUsers()
 }
 
 export async function updateUserStatus(userId: string, isActive: boolean): Promise<User> {
-  const user = findUser(userId)
-  user.isActive = isActive
-
-  return mockMutate(user)
+  return updateBackendUserStatus(userId, isActive)
 }
 
 export async function updateUserRole(userId: string, role: ApiUserRole): Promise<User> {
-  const user = findUser(userId)
-  user.role = role
+  return updateBackendUserRole(userId, role)
+}
 
-  return mockMutate(user)
+export async function getUserById(userId: string): Promise<User> {
+  return getBackendUserById(userId)
 }
 
 export async function getSongs(): Promise<Song[]> {
@@ -134,16 +138,6 @@ export async function deleteTag(tagId: string): Promise<void> {
   removeById(tags, tagId)
 
   return mockResolve(undefined)
-}
-
-function findUser(userId: string): User {
-  const user = users.find((item) => item.id === userId)
-
-  if (!user) {
-    throw new Error('User not found')
-  }
-
-  return user
 }
 
 function findSong(songId: string): Song {
