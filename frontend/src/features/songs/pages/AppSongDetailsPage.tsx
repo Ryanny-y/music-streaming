@@ -10,6 +10,10 @@ import { usePlayback } from '@/features/user/usePlayback'
 import { songService, userService } from '@/services'
 import type { Song } from '@/types'
 
+function getErrorMessage(error: unknown): string {
+  return error instanceof Error ? error.message : 'Unable to load this song right now.'
+}
+
 export function AppSongDetailsPage() {
   const { songId } = useParams()
   const { user } = useAuth()
@@ -17,22 +21,60 @@ export function AppSongDetailsPage() {
   const [song, setSong] = useState<Song | null>(null)
   const [favorites, setFavorites] = useState<Song[]>([])
   const [isLoading, setIsLoading] = useState(true)
+  const [errorMessage, setErrorMessage] = useState<string | null>(null)
+  const [isFavoriteSaving, setIsFavoriteSaving] = useState(false)
 
   useEffect(() => {
-    if (!songId || !user) {
+    let isMounted = true
+
+    if (!songId) {
+      setSong(null)
+      setIsLoading(false)
       return
     }
 
+    if (!user) {
+      return
+    }
+
+    setIsLoading(true)
+    setErrorMessage(null)
+
     Promise.all([songService.getSongById(songId), userService.getFavorites(user.id)])
       .then(([songDetails, userFavorites]) => {
+        if (!isMounted) {
+          return
+        }
+
         setSong(songDetails)
         setFavorites(userFavorites)
       })
-      .finally(() => setIsLoading(false))
+      .catch((error: unknown) => {
+        if (!isMounted) {
+          return
+        }
+
+        setSong(null)
+        setFavorites([])
+        setErrorMessage(getErrorMessage(error))
+      })
+      .finally(() => {
+        if (isMounted) {
+          setIsLoading(false)
+        }
+      })
+
+    return () => {
+      isMounted = false
+    }
   }, [songId, user])
 
   if (isLoading) {
     return <LoadingState label="Loading song" />
+  }
+
+  if (errorMessage) {
+    return <EmptyState title="Could not load song" description={errorMessage} />
   }
 
   if (!song) {
@@ -50,22 +92,35 @@ export function AppSongDetailsPage() {
       return
     }
 
-    playSong(song)
-    await songService.recordSongPlay(song.id, user.id)
-    setSong({ ...song, playCount: song.playCount + 1 })
+    try {
+      const updatedSong = await songService.recordSongPlay(song.id, user.id)
+
+      setSong(updatedSong ?? { ...song, playCount: song.playCount + 1 })
+      playSong(updatedSong ?? song)
+    } catch (error: unknown) {
+      setErrorMessage(getErrorMessage(error))
+    }
   }
 
   const handleFavoriteToggle = async () => {
-    if (!user) return
+    if (!user || isFavoriteSaving) return
 
-    if (isFavorite) {
-      await userService.removeFavorite(user.id, song.id)
-      setFavorites((items) => items.filter((item) => item.id !== song.id))
-      return
+    setIsFavoriteSaving(true)
+
+    try {
+      if (isFavorite) {
+        await userService.removeFavorite(user.id, song.id)
+        setFavorites((items) => items.filter((item) => item.id !== song.id))
+        return
+      }
+
+      await userService.addFavorite(user.id, song.id)
+      setFavorites((items) => [...items, song])
+    } catch (error: unknown) {
+      setErrorMessage(getErrorMessage(error))
+    } finally {
+      setIsFavoriteSaving(false)
     }
-
-    await userService.addFavorite(user.id, song.id)
-    setFavorites((items) => [...items, song])
   }
 
   return (
@@ -104,7 +159,7 @@ export function AppSongDetailsPage() {
               <Music2 className="size-4" aria-hidden="true" />
               {isCurrentSongPlaying ? 'Pause' : 'Play'}
             </Button>
-            <Button variant="secondary" type="button" onClick={handleFavoriteToggle}>
+            <Button variant="secondary" type="button" onClick={handleFavoriteToggle} disabled={isFavoriteSaving}>
               <Heart className={isFavorite ? 'size-4 fill-current text-primary' : 'size-4'} aria-hidden="true" />
               {isFavorite ? 'Remove favorite' : 'Add favorite'}
             </Button>

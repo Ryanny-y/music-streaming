@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useRef, useState, type PropsWithChildren } from 'react'
 
-import { api } from '@/lib/api'
-import { getSongStreamPath } from '@/lib/media'
+import { songService } from '@/services'
 import type { Song } from '@/types'
 
 import { PlaybackContext, type PlaybackContextValue } from './playbackContextValue'
@@ -61,7 +60,7 @@ export function PlaybackProvider({ children }: PropsWithChildren) {
     setProgress(0)
 
     try {
-      const response = await api.get<Blob>(getSongStreamPath(song.id), { responseType: 'blob' })
+      const streamBlob = await songService.getSongStreamBlob(song.id)
 
       if (requestIdRef.current !== requestId) {
         return
@@ -71,7 +70,7 @@ export function PlaybackProvider({ children }: PropsWithChildren) {
         URL.revokeObjectURL(objectUrlRef.current)
       }
 
-      const objectUrl = URL.createObjectURL(response.data)
+      const objectUrl = URL.createObjectURL(streamBlob)
       objectUrlRef.current = objectUrl
       audio.src = objectUrl
       await audio.play()

@@ -97,6 +97,10 @@ export async function getSongById(songId: string): Promise<Song | null> {
   }
 }
 
+export async function getSongDetails(songId: string): Promise<Song | null> {
+  return getSongById(songId)
+}
+
 export async function getPublicSongDetails(songId: string): Promise<Song | null> {
   try {
     const response = await api.get<PublicSongResponse>(`/public/songs/${songId}`)
@@ -148,4 +152,10 @@ export async function recordSongPlay(songId: string, _userId?: string): Promise<
   await api.post(`/songs/${songId}/play`)
 
   return getSongById(songId)
+}
+
+export async function getSongStreamBlob(songId: string): Promise<Blob> {
+  const response = await api.get<Blob>(`/songs/${songId}/stream`, { responseType: 'blob' })
+
+  return response.data
 }
