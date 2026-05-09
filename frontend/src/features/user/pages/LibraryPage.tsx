@@ -5,8 +5,9 @@ import { useNavigate } from 'react-router-dom'
 
 import { EmptyState, LoadingState, PageHeader, SearchBar, SongCard } from '@/components/common'
 import { Button } from '@/components/ui'
+import { useAuth } from '@/features/auth'
 import { usePlayback } from '@/features/user/usePlayback'
-import { categoryService, songService, tagService } from '@/services'
+import { categoryService, songService, tagService, userService } from '@/services'
 import type { Category, Song, Tag } from '@/types'
 
 function getErrorMessage(error: unknown): string {
@@ -17,13 +18,16 @@ export function LibraryPage() {
   const [songs, setSongs] = useState<Song[]>([])
   const [categories, setCategories] = useState<Category[]>([])
   const [tags, setTags] = useState<Tag[]>([])
+  const [favoriteSongIds, setFavoriteSongIds] = useState<string[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
+  const [favoriteMessage, setFavoriteMessage] = useState<string | null>(null)
   const [searchValue, setSearchValue] = useState('')
   const [categoryId, setCategoryId] = useState('')
   const [tagName, setTagName] = useState('')
   const [sortBy, setSortBy] = useState('newest')
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid')
+  const { user } = useAuth()
   const { playSong } = usePlayback()
   const navigate = useNavigate()
 
@@ -51,6 +55,32 @@ export function LibraryPage() {
       isMounted = false
     }
   }, [])
+
+  useEffect(() => {
+    let isMounted = true
+
+    if (!user) {
+      setFavoriteSongIds([])
+      return
+    }
+
+    userService
+      .getFavorites(user.id)
+      .then((favorites) => {
+        if (isMounted) {
+          setFavoriteSongIds(favorites.map((song) => song.id))
+        }
+      })
+      .catch(() => {
+        if (isMounted) {
+          setFavoriteSongIds([])
+        }
+      })
+
+    return () => {
+      isMounted = false
+    }
+  }, [user])
 
   useEffect(() => {
     let isMounted = true
@@ -113,6 +143,27 @@ export function LibraryPage() {
     navigate(`/app/songs/${song.id}`)
   }
 
+  const toggleFavorite = async (song: Song) => {
+    if (!user) {
+      return
+    }
+
+    setFavoriteMessage(null)
+
+    try {
+      if (favoriteSongIds.includes(song.id)) {
+        await userService.removeFavorite(user.id, song.id)
+        setFavoriteSongIds((current) => current.filter((songId) => songId !== song.id))
+        return
+      }
+
+      await userService.addFavorite(user.id, song.id)
+      setFavoriteSongIds((current) => (current.includes(song.id) ? current : [...current, song.id]))
+    } catch (error: unknown) {
+      setFavoriteMessage(error instanceof Error ? error.message : 'Unable to update favorite.')
+    }
+  }
+
   return (
     <div className="space-y-8">
       <PageHeader
@@ -155,6 +206,8 @@ export function LibraryPage() {
         </div>
       </section>
 
+      {favoriteMessage ? <p className="text-sm text-destructive">{favoriteMessage}</p> : null}
+
       {isLoading ? (
         <LoadingState label="Loading library" />
       ) : errorMessage ? (
@@ -168,6 +221,8 @@ export function LibraryPage() {
               key={song.id}
               song={song}
               showFavorite
+              isFavorite={favoriteSongIds.includes(song.id)}
+              onFavoriteToggle={toggleFavorite}
               onOpen={openSong}
               onPlay={playSong}
             />

@@ -19,6 +19,7 @@ export function DashboardPage() {
   const [categories, setCategories] = useState<Category[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
+  const [favoriteMessage, setFavoriteMessage] = useState<string | null>(null)
   const navigate = useNavigate()
 
   useEffect(() => {
@@ -75,6 +76,46 @@ export function DashboardPage() {
   }
 
   const userName = dashboard.user.fullName || user?.fullName || 'listener'
+  const favoriteSongIds = dashboard.favorites.map((song) => song.id)
+
+  const toggleFavorite = async (song: Song) => {
+    if (!user) {
+      return
+    }
+
+    setFavoriteMessage(null)
+
+    try {
+      if (favoriteSongIds.includes(song.id)) {
+        await userService.removeFavorite(user.id, song.id)
+        setDashboard((current) =>
+          current
+            ? {
+                ...current,
+                favoriteCount: Math.max(current.favoriteCount - 1, 0),
+                favorites: current.favorites.filter((favorite) => favorite.id !== song.id),
+              }
+            : current,
+        )
+        return
+      }
+
+      await userService.addFavorite(user.id, song.id)
+      setDashboard((current) =>
+        current
+          ? {
+              ...current,
+              favoriteCount: current.favoriteCount + 1,
+              favorites: current.favorites.some((favorite) => favorite.id === song.id)
+                ? current.favorites
+                : [song, ...current.favorites],
+            }
+          : current,
+      )
+    } catch (error: unknown) {
+      setFavoriteMessage(error instanceof Error ? error.message : 'Unable to update favorite.')
+    }
+  }
 
   return (
     <div className="space-y-10">
@@ -95,12 +136,16 @@ export function DashboardPage() {
         <StatCard title="Available songs" value={dashboard.availableSongCount} icon={<Music2 className="size-5" />} />
       </section>
 
+      {favoriteMessage ? <p className="text-sm text-destructive">{favoriteMessage}</p> : null}
+
       <SongSection
         title="Recently Played"
         songs={dashboard.recentlyPlayed}
         emptyTitle="No listening history yet"
         emptyDescription="Songs will appear here after you press play."
+        favoriteSongIds={favoriteSongIds}
         onOpen={(song) => navigate(`/app/songs/${song.id}`)}
+        onFavoriteToggle={toggleFavorite}
         onPlay={playSong}
       />
 
@@ -109,7 +154,9 @@ export function DashboardPage() {
         songs={dashboard.favorites}
         emptyTitle="No favorites yet"
         emptyDescription="Favorite songs from the player or library to see them here."
+        favoriteSongIds={favoriteSongIds}
         onOpen={(song) => navigate(`/app/songs/${song.id}`)}
+        onFavoriteToggle={toggleFavorite}
         onPlay={playSong}
       />
 
@@ -118,7 +165,9 @@ export function DashboardPage() {
         songs={dashboard.recommendedSongs}
         emptyTitle="No recommendations yet"
         emptyDescription="Recommendations will appear as more songs become available."
+        favoriteSongIds={favoriteSongIds}
         onOpen={(song) => navigate(`/app/songs/${song.id}`)}
+        onFavoriteToggle={toggleFavorite}
         onPlay={playSong}
       />
 
@@ -127,7 +176,9 @@ export function DashboardPage() {
         songs={dashboard.latestSongs}
         emptyTitle="No latest songs yet"
         emptyDescription="Newly published songs will appear here."
+        favoriteSongIds={favoriteSongIds}
         onOpen={(song) => navigate(`/app/songs/${song.id}`)}
+        onFavoriteToggle={toggleFavorite}
         onPlay={playSong}
       />
 
@@ -152,18 +203,37 @@ type SongSectionProps = {
   songs: Song[]
   emptyTitle: string
   emptyDescription: string
+  favoriteSongIds: string[]
   onOpen: (song: Song) => void
+  onFavoriteToggle: (song: Song) => void
   onPlay: (song: Song) => void
 }
 
-function SongSection({ emptyDescription, emptyTitle, onOpen, onPlay, songs, title }: SongSectionProps) {
+function SongSection({
+  emptyDescription,
+  emptyTitle,
+  favoriteSongIds,
+  onFavoriteToggle,
+  onOpen,
+  onPlay,
+  songs,
+  title,
+}: SongSectionProps) {
   return (
     <section className="space-y-5">
       <PageHeader title={title} />
       {songs.length > 0 ? (
         <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-4">
           {songs.map((song) => (
-            <SongCard key={song.id} song={song} showFavorite onOpen={onOpen} onPlay={onPlay} />
+            <SongCard
+              key={song.id}
+              song={song}
+              showFavorite
+              isFavorite={favoriteSongIds.includes(song.id)}
+              onFavoriteToggle={onFavoriteToggle}
+              onOpen={onOpen}
+              onPlay={onPlay}
+            />
           ))}
         </div>
       ) : (
