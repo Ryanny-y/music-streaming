@@ -7,25 +7,82 @@ import { usePlayback } from '@/features/user/usePlayback'
 import { categoryService, songService, tagService } from '@/services'
 import type { Category, Song, Tag } from '@/types'
 
+function getErrorMessage(error: unknown): string {
+  return error instanceof Error ? error.message : 'Unable to search right now.'
+}
+
 export function SearchPage() {
   const [searchParams, setSearchParams] = useSearchParams()
   const [songs, setSongs] = useState<Song[]>([])
   const [categories, setCategories] = useState<Category[]>([])
   const [tags, setTags] = useState<Tag[]>([])
   const [isLoading, setIsLoading] = useState(true)
+  const [errorMessage, setErrorMessage] = useState<string | null>(null)
   const { playSong } = usePlayback()
   const navigate = useNavigate()
   const query = searchParams.get('q') ?? ''
 
   useEffect(() => {
-    Promise.all([songService.getPublishedSongs(), categoryService.getCategories(), tagService.getTags()])
-      .then(([publishedSongs, musicCategories, musicTags]) => {
-        setSongs(publishedSongs)
+    let isMounted = true
+
+    Promise.all([categoryService.getCategories(), tagService.getTags()])
+      .then(([musicCategories, musicTags]) => {
+        if (!isMounted) {
+          return
+        }
+
         setCategories(musicCategories)
         setTags(musicTags)
       })
-      .finally(() => setIsLoading(false))
+      .catch(() => {
+        if (!isMounted) {
+          return
+        }
+
+        setCategories([])
+        setTags([])
+      })
+
+    return () => {
+      isMounted = false
+    }
   }, [])
+
+  useEffect(() => {
+    let isMounted = true
+    const normalizedQuery = query.trim()
+
+    setIsLoading(true)
+    setErrorMessage(null)
+
+    const request = normalizedQuery ? songService.searchSongs(normalizedQuery) : songService.getPublishedSongs()
+
+    request
+      .then((songResults) => {
+        if (!isMounted) {
+          return
+        }
+
+        setSongs(songResults)
+      })
+      .catch((error: unknown) => {
+        if (!isMounted) {
+          return
+        }
+
+        setSongs([])
+        setErrorMessage(getErrorMessage(error))
+      })
+      .finally(() => {
+        if (isMounted) {
+          setIsLoading(false)
+        }
+      })
+
+    return () => {
+      isMounted = false
+    }
+  }, [query])
 
   const results = useMemo(() => {
     const normalizedQuery = query.trim().toLowerCase()
@@ -40,12 +97,7 @@ export function SearchPage() {
     }
 
     return {
-      songs: songs.filter((song) =>
-        [song.title, song.artist, song.album, song.categoryName, ...song.tags]
-          .join(' ')
-          .toLowerCase()
-          .includes(normalizedQuery),
-      ),
+      songs,
       artists: uniqueArtists(songs).filter((artist) => artist.toLowerCase().includes(normalizedQuery)),
       categories: categories.filter((category) =>
         [category.name, category.description].join(' ').toLowerCase().includes(normalizedQuery),
@@ -82,6 +134,8 @@ export function SearchPage() {
 
       {isLoading ? (
         <LoadingState label="Searching catalog" />
+      ) : errorMessage ? (
+        <EmptyState title="Could not search" description={errorMessage} />
       ) : !hasResults ? (
         <EmptyState title="No results found" description="Try searching another song, artist, category, or tag." />
       ) : (

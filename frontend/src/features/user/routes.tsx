@@ -8,7 +8,7 @@ import { LibraryPage } from './pages/LibraryPage'
 import { ListeningHistoryPage } from './pages/ListeningHistoryPage'
 import { LyricsPage } from './pages/LyricsPage'
 import { ProfilePage } from './pages/ProfilePage'
-import { SearchPage } from './pages/SearchPage'
+import { SearchResultsPage } from './pages/SearchResultsPage'
 import { SongDetailsPage } from './pages/SongDetailsPage'
 import { TagsPage } from './pages/TagsPage'
 import { TagSongsPage } from './pages/TagSongsPage'
@@ -56,7 +56,7 @@ export const userRoutes: RouteObject[] = [
   },
   {
     path: 'search',
-    element: <SearchPage />,
+    element: <SearchResultsPage />,
   },
   {
     path: 'profile',
