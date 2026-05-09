@@ -40,7 +40,7 @@ export function UserLayout() {
 function UserLayoutContent() {
   const [searchValue, setSearchValue] = useState('')
   const { logout, user } = useAuth()
-  const { currentSong, isPlaying, togglePlayback } = usePlayback()
+  const { currentSong, isPlaying, progress, togglePlayback } = usePlayback()
   const navigate = useNavigate()
 
   const handleLogout = async () => {
@@ -154,7 +154,7 @@ function UserLayoutContent() {
         </div>
       </nav>
 
-      <BottomPlayer song={currentSong} isPlaying={isPlaying} onPlayPause={togglePlayback} />
+      <BottomPlayer song={currentSong} isPlaying={isPlaying} progress={progress} onPlayPause={togglePlayback} />
     </div>
   )
 }

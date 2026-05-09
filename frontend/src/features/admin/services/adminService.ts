@@ -1,4 +1,5 @@
 import { api, unwrapResponse } from '@/lib/api'
+import { resolveMediaUrl } from '@/lib/media'
 import type { AdminDashboard, ApiUserRole, Category, Song, SongStatus, Tag, User } from '@/types'
 
 export type AdminSongPayload = {
@@ -112,8 +113,8 @@ function normalizeSong(song: AdminSongResponse): Song {
     album: song.album ?? '',
     description: song.description ?? '',
     lyrics: song.lyrics ?? '',
-    audioUrl: song.audioUrl ?? '',
-    coverImageUrl: song.coverImageUrl ?? '',
+    audioUrl: resolveMediaUrl(song.audioUrl),
+    coverImageUrl: resolveMediaUrl(song.coverImageUrl),
     duration: normalizeDuration(song.duration),
     releaseDate: song.releaseDate ?? '',
     categoryId: song.categoryId ?? '',

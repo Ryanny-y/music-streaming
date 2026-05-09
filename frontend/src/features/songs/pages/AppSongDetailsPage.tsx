@@ -13,7 +13,7 @@ import type { Song } from '@/types'
 export function AppSongDetailsPage() {
   const { songId } = useParams()
   const { user } = useAuth()
-  const { currentSong, isPlaying, playSong, togglePlayback } = usePlayback()
+  const { currentSong, isPlaying, playSong, progress, togglePlayback } = usePlayback()
   const [song, setSong] = useState<Song | null>(null)
   const [favorites, setFavorites] = useState<Song[]>([])
   const [isLoading, setIsLoading] = useState(true)
@@ -84,7 +84,12 @@ export function AppSongDetailsPage() {
         }
       />
 
-      <MusicPlayer song={song} isPlaying={isCurrentSongPlaying} onPlayPause={handlePlayPause} />
+      <MusicPlayer
+        song={song}
+        isPlaying={isCurrentSongPlaying}
+        progress={isCurrentSongPlaying ? progress : 0}
+        onPlayPause={handlePlayPause}
+      />
 
       <section className="grid gap-6 lg:grid-cols-[1fr_18rem]">
         <div className="rounded-lg border border-border bg-card/80 p-6">

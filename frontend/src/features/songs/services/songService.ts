@@ -1,6 +1,7 @@
 import { isAxiosError } from 'axios'
 
 import { api, unwrapResponse } from '@/lib/api'
+import { resolveMediaUrl } from '@/lib/media'
 import type { Song } from '@/types'
 
 type PageResponse<T> = {
@@ -55,8 +56,8 @@ function normalizeSong(song: PublicSongResponse): Song {
     album: song.album ?? '',
     description: song.description ?? '',
     lyrics: song.lyrics ?? '',
-    audioUrl: song.audioUrl ?? '',
-    coverImageUrl: song.coverImageUrl ?? '',
+    audioUrl: resolveMediaUrl(song.audioUrl),
+    coverImageUrl: resolveMediaUrl(song.coverImageUrl),
     duration: normalizeDuration(song.duration),
     releaseDate: song.releaseDate ?? '',
     categoryId: song.categoryId ?? '',

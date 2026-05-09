@@ -19,11 +19,19 @@ type AuthTokens = {
   refreshToken?: string
 }
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:8080/api'
+export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:8080/api'
 
 export const api = axios.create({
   baseURL: API_BASE_URL,
 })
+
+export function resolveBackendUrl(path: string): string {
+  if (!path || /^(blob:|data:|https?:\/\/)/i.test(path)) {
+    return path
+  }
+
+  return new URL(path, API_BASE_URL).toString()
+}
 
 function clearAuthStorage(): void {
   localStorage.removeItem(ACCESS_TOKEN_KEY)
