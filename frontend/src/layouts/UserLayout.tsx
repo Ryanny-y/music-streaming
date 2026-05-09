@@ -40,7 +40,7 @@ export function UserLayout() {
 function UserLayoutContent() {
   const [searchValue, setSearchValue] = useState('')
   const { logout, user } = useAuth()
-  const { currentSong, isPlaying, progress, togglePlayback } = usePlayback()
+  const { currentSong, isPlaying, progress, currentTime, duration, togglePlayback, seekTo } = usePlayback()
   const navigate = useNavigate()
 
   const handleLogout = async () => {
@@ -130,7 +130,7 @@ function UserLayoutContent() {
         </main>
       </div>
 
-      <nav className="fixed inset-x-0 bottom-[4.75rem] z-40 border-t border-border bg-background/90 px-2 py-2 backdrop-blur md:hidden">
+      <nav className="fixed inset-x-0 bottom-19 z-40 border-t border-border bg-background/90 px-2 py-2 backdrop-blur md:hidden">
         <div className="flex gap-1 overflow-x-auto pb-1">
           {sidebarLinks.map((link) => {
             const Icon = link.icon
@@ -154,7 +154,15 @@ function UserLayoutContent() {
         </div>
       </nav>
 
-      <BottomPlayer song={currentSong} isPlaying={isPlaying} progress={progress} onPlayPause={togglePlayback} />
+      <BottomPlayer
+        song={currentSong}
+        isPlaying={isPlaying}
+        progress={progress}
+        currentTime={currentTime}
+        duration={duration}
+        onPlayPause={togglePlayback}
+        seekTo={seekTo}
+      />
     </div>
   )
 }

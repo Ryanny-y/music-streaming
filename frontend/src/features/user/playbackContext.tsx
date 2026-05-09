@@ -9,6 +9,8 @@ export function PlaybackProvider({ children }: PropsWithChildren) {
   const [currentSong, setCurrentSong] = useState<Song | null>(null)
   const [isPlaying, setIsPlaying] = useState(false)
   const [progress, setProgress] = useState(0)
+  const [currentTime, setCurrentTime] = useState(0)
+  const [duration, setDuration] = useState(0)
   const audioRef = useRef<HTMLAudioElement | null>(null)
   const objectUrlRef = useRef<string | null>(null)
   const requestIdRef = useRef(0)
@@ -20,9 +22,12 @@ export function PlaybackProvider({ children }: PropsWithChildren) {
     const updateProgress = () => {
       if (!audio.duration || Number.isNaN(audio.duration)) {
         setProgress(0)
+        setCurrentTime(0)
+        setDuration(0)
         return
       }
-
+      setCurrentTime(audio.currentTime)
+      setDuration(audio.duration)
       setProgress((audio.currentTime / audio.duration) * 100)
     }
     const handleEnded = () => {
@@ -103,8 +108,18 @@ export function PlaybackProvider({ children }: PropsWithChildren) {
         audio.pause()
         setIsPlaying(false)
       },
-    }),
-    [currentSong, isPlaying, progress],
+    currentTime,
+    duration,
+    seekTo: (seconds: number) => {
+      const audio = audioRef.current
+      if (audio && !Number.isNaN(audio.duration)) {
+        audio.currentTime = Math.max(0, Math.min(seconds, audio.duration))
+        setCurrentTime(audio.currentTime)
+        setProgress((audio.currentTime / audio.duration) * 100)
+      }
+    },
+  }),
+  [currentSong, isPlaying, progress, currentTime, duration],
   )
 
   return <PlaybackContext value={value}>{children}</PlaybackContext>

@@ -17,7 +17,7 @@ function getErrorMessage(error: unknown): string {
 export function AppSongDetailsPage() {
   const { songId } = useParams()
   const { user } = useAuth()
-  const { currentSong, isPlaying, playSong, progress, togglePlayback } = usePlayback()
+  const { currentSong, isPlaying, playSong, progress, togglePlayback, currentTime, duration, seekTo } = usePlayback()
   const [song, setSong] = useState<Song | null>(null)
   const [favorites, setFavorites] = useState<Song[]>([])
   const [isLoading, setIsLoading] = useState(true)
@@ -143,7 +143,10 @@ export function AppSongDetailsPage() {
         song={song}
         isPlaying={isCurrentSongPlaying}
         progress={isCurrentSongPlaying ? progress : 0}
+        currentTime={isCurrentSongPlaying ? currentTime : 0}
+        duration={isCurrentSongPlaying ? duration : song.duration}
         onPlayPause={handlePlayPause}
+        seekTo={isCurrentSongPlaying ? seekTo : undefined}
       />
 
       <section className="grid gap-6 lg:grid-cols-[1fr_18rem]">

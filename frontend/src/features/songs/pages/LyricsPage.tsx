@@ -14,7 +14,7 @@ function getErrorMessage(error: unknown): string {
 
 export function LyricsPage() {
   const { songId } = useParams()
-  const { currentSong, isPlaying, playSong, progress, togglePlayback } = usePlayback()
+  const { currentSong, isPlaying, playSong, progress, togglePlayback, currentTime, duration, seekTo } = usePlayback()
   const [song, setSong] = useState<Song | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
@@ -100,7 +100,10 @@ export function LyricsPage() {
         song={song}
         isPlaying={isCurrentSongPlaying}
         progress={isCurrentSongPlaying ? progress : 0}
+        currentTime={isCurrentSongPlaying ? currentTime : 0}
+        duration={isCurrentSongPlaying ? duration : song.duration}
         onPlayPause={handlePlayPause}
+        seekTo={isCurrentSongPlaying ? seekTo : undefined}
       />
       <LyricsViewer lyrics={song.lyrics} title={`${song.title} lyrics`} />
     </div>
