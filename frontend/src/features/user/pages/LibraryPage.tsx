@@ -1,19 +1,24 @@
-import { Grid2X2, List } from 'lucide-react'
+import { Grid2X2, List, Play } from 'lucide-react'
 import type { ReactNode } from 'react'
 import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 
-import { EmptyState, LoadingState, PageHeader, SearchBar, SongCard, SongList } from '@/components/common'
+import { EmptyState, LoadingState, PageHeader, SearchBar, SongCard } from '@/components/common'
 import { Button } from '@/components/ui'
 import { usePlayback } from '@/features/user/usePlayback'
 import { categoryService, songService, tagService } from '@/services'
 import type { Category, Song, Tag } from '@/types'
+
+function getErrorMessage(error: unknown): string {
+  return error instanceof Error ? error.message : 'Unable to load the library right now.'
+}
 
 export function LibraryPage() {
   const [songs, setSongs] = useState<Song[]>([])
   const [categories, setCategories] = useState<Category[]>([])
   const [tags, setTags] = useState<Tag[]>([])
   const [isLoading, setIsLoading] = useState(true)
+  const [errorMessage, setErrorMessage] = useState<string | null>(null)
   const [searchValue, setSearchValue] = useState('')
   const [categoryId, setCategoryId] = useState('')
   const [tagName, setTagName] = useState('')
@@ -23,28 +28,78 @@ export function LibraryPage() {
   const navigate = useNavigate()
 
   useEffect(() => {
-    Promise.all([songService.getPublishedSongs(), categoryService.getCategories(), tagService.getTags()])
-      .then(([publishedSongs, musicCategories, musicTags]) => {
-        setSongs(publishedSongs)
+    let isMounted = true
+
+    Promise.all([categoryService.getCategories(), tagService.getTags()])
+      .then(([musicCategories, musicTags]) => {
+        if (!isMounted) {
+          return
+        }
+
         setCategories(musicCategories)
         setTags(musicTags)
       })
-      .finally(() => setIsLoading(false))
+      .catch((error: unknown) => {
+        if (!isMounted) {
+          return
+        }
+
+        setErrorMessage(getErrorMessage(error))
+      })
+
+    return () => {
+      isMounted = false
+    }
   }, [])
 
+  useEffect(() => {
+    let isMounted = true
+    const query = searchValue.trim()
+
+    setIsLoading(true)
+    setErrorMessage(null)
+
+    const timeoutId = window.setTimeout(() => {
+      const request = query ? songService.searchSongs(query) : songService.getPublishedSongs()
+
+      request
+        .then((publishedSongs) => {
+          if (!isMounted) {
+            return
+          }
+
+          setSongs(publishedSongs)
+        })
+        .catch((error: unknown) => {
+          if (!isMounted) {
+            return
+          }
+
+          setSongs([])
+          setErrorMessage(getErrorMessage(error))
+        })
+        .finally(() => {
+          if (isMounted) {
+            setIsLoading(false)
+          }
+        })
+    }, 250)
+
+    return () => {
+      isMounted = false
+      window.clearTimeout(timeoutId)
+    }
+  }, [searchValue])
+
   const filteredSongs = useMemo(() => {
-    const query = searchValue.trim().toLowerCase()
     const tag = tagName.trim().toLowerCase()
 
     return songs
       .filter((song) => {
-        const matchesSearch =
-          !query ||
-          [song.title, song.artist, song.album, song.categoryName, ...song.tags].join(' ').toLowerCase().includes(query)
         const matchesCategory = !categoryId || song.categoryId === categoryId
         const matchesTag = !tag || song.tags.some((songTag) => songTag.toLowerCase() === tag)
 
-        return matchesSearch && matchesCategory && matchesTag
+        return matchesCategory && matchesTag
       })
       .sort((a, b) => {
         if (sortBy === 'title') return a.title.localeCompare(b.title)
@@ -52,7 +107,11 @@ export function LibraryPage() {
         if (sortBy === 'most-played') return b.playCount - a.playCount
         return new Date(b.releaseDate).getTime() - new Date(a.releaseDate).getTime()
       })
-  }, [categoryId, searchValue, songs, sortBy, tagName])
+  }, [categoryId, songs, sortBy, tagName])
+
+  const openSong = (song: Song) => {
+    navigate(`/app/songs/${song.id}`)
+  }
 
   return (
     <div className="space-y-8">
@@ -98,6 +157,8 @@ export function LibraryPage() {
 
       {isLoading ? (
         <LoadingState label="Loading library" />
+      ) : errorMessage ? (
+        <EmptyState title="Could not load library" description={errorMessage} />
       ) : filteredSongs.length === 0 ? (
         <EmptyState title="No songs match your filters" description="Try clearing search, category, or tag filters." />
       ) : viewMode === 'grid' ? (
@@ -107,13 +168,13 @@ export function LibraryPage() {
               key={song.id}
               song={song}
               showFavorite
-              onOpen={() => navigate(`/app/songs/${song.id}`)}
+              onOpen={openSong}
               onPlay={playSong}
             />
           ))}
         </div>
       ) : (
-        <SongList songs={filteredSongs} showFavorite onPlay={playSong} />
+        <LibrarySongList songs={filteredSongs} onOpen={openSong} onPlay={playSong} />
       )}
     </div>
   )
@@ -137,4 +198,93 @@ function FilterSelect({ children, label, onChange, value }: FilterSelectProps) {
       {children}
     </select>
   )
+}
+
+type LibrarySongListProps = {
+  songs: Song[]
+  onOpen: (song: Song) => void
+  onPlay: (song: Song) => void
+}
+
+function LibrarySongList({ onOpen, onPlay, songs }: LibrarySongListProps) {
+  return (
+    <div className="overflow-hidden rounded-lg border border-border bg-card/70">
+      <div className="hidden grid-cols-[3rem_1fr_12rem_8rem] gap-4 border-b border-border px-4 py-3 text-xs font-medium uppercase tracking-normal text-muted-foreground md:grid">
+        <span />
+        <span>Song</span>
+        <span>Category</span>
+        <span>Duration</span>
+      </div>
+
+      <div className="divide-y divide-border">
+        {songs.map((song) => (
+          <div
+            className="grid cursor-pointer gap-4 px-4 py-3 transition hover:bg-secondary/50 md:grid-cols-[3rem_1fr_12rem_8rem] md:items-center"
+            key={song.id}
+            role="button"
+            tabIndex={0}
+            onClick={() => onOpen(song)}
+            onKeyDown={(event) => {
+              if (event.key === 'Enter' || event.key === ' ') {
+                event.preventDefault()
+                onOpen(song)
+              }
+            }}
+          >
+            <button
+              className="hidden size-10 items-center justify-center rounded-full bg-primary text-primary-foreground md:flex"
+              type="button"
+              onClick={(event) => {
+                event.stopPropagation()
+                onPlay(song)
+              }}
+              aria-label={`Play ${song.title}`}
+            >
+              <Play className="size-4 fill-current" aria-hidden="true" />
+            </button>
+
+            <div className="flex min-w-0 items-center gap-3">
+              <img
+                className="size-12 rounded-md object-cover"
+                src={song.coverImageUrl}
+                alt={`${song.title} cover`}
+                loading="lazy"
+                onError={(event) => {
+                  event.currentTarget.style.display = 'none'
+                }}
+              />
+              <div className="min-w-0">
+                <p className="truncate font-medium text-foreground">{song.title}</p>
+                <p className="truncate text-sm text-muted-foreground">{song.artist}</p>
+              </div>
+            </div>
+
+            <p className="text-sm text-muted-foreground">{song.categoryName}</p>
+            <div className="flex items-center justify-between gap-3">
+              <p className="text-sm text-muted-foreground">{formatDuration(song.duration)}</p>
+              <Button
+                className="md:hidden"
+                size="sm"
+                type="button"
+                onClick={(event) => {
+                  event.stopPropagation()
+                  onPlay(song)
+                }}
+              >
+                <Play className="size-4 fill-current" aria-hidden="true" />
+                Play
+              </Button>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+function formatDuration(duration: number): string {
+  const minutes = Math.floor(duration / 60)
+  const seconds = duration % 60
+
+  return `${minutes}:${seconds.toString().padStart(2, '0')}`
 }

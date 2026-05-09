@@ -2,11 +2,11 @@ import { api, unwrapResponse } from '@/lib/api'
 import type { Tag } from '@/types'
 
 type PageResponse<T> = {
-  content: T[]
+  content?: T[]
 }
 
 type PublicTagResponse = {
-  id: string
+  id?: string
   tagId?: string
   name: string
   songCount?: number | null
@@ -16,21 +16,21 @@ type PublicTagResponse = {
 
 function normalizeTag(tag: PublicTagResponse): Tag {
   return {
-    id: tag.id ?? tag.tagId,
+    id: tag.id ?? tag.tagId ?? '',
     name: tag.name,
     songCount: tag.songCount ?? 0,
   }
 }
 
 function unwrapPage<T>(payload: PageResponse<T> | T[]): T[] {
-  return Array.isArray(payload) ? payload : payload.content
+  return Array.isArray(payload) ? payload : payload.content ?? []
 }
 
 export async function getTags(): Promise<Tag[]> {
   const response = await api.get<PageResponse<PublicTagResponse>>('/public/tags')
   const payload = unwrapResponse<PageResponse<PublicTagResponse>>(response)
 
-  return unwrapPage(payload).map(normalizeTag)
+  return unwrapPage(payload).map(normalizeTag).filter((tag) => tag.id)
 }
 
 export async function getTagById(tagId: string): Promise<Tag | null> {

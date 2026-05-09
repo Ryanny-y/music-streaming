@@ -4,11 +4,11 @@ import { api, unwrapResponse } from '@/lib/api'
 import type { Song } from '@/types'
 
 type PageResponse<T> = {
-  content: T[]
+  content?: T[]
 }
 
 type PublicSongResponse = {
-  id: string
+  id?: string
   songId?: string
   title: string
   artist: string
@@ -49,7 +49,7 @@ function normalizeDuration(duration: PublicSongResponse['duration']): number {
 
 function normalizeSong(song: PublicSongResponse): Song {
   return {
-    id: song.id ?? song.songId,
+    id: song.id ?? song.songId ?? '',
     title: song.title,
     artist: song.artist,
     album: song.album ?? '',
@@ -70,14 +70,14 @@ function normalizeSong(song: PublicSongResponse): Song {
 }
 
 function unwrapPage<T>(payload: PageResponse<T> | T[]): T[] {
-  return Array.isArray(payload) ? payload : payload.content
+  return Array.isArray(payload) ? payload : payload.content ?? []
 }
 
 export async function getPublishedSongs(): Promise<Song[]> {
   const response = await api.get<PageResponse<PublicSongResponse>>('/public/songs')
   const payload = unwrapResponse<PageResponse<PublicSongResponse>>(response)
 
-  return unwrapPage(payload).map(normalizeSong).filter((song) => song.status === 'PUBLISHED')
+  return unwrapPage(payload).map(normalizeSong).filter((song) => song.id && song.status === 'PUBLISHED')
 }
 
 export async function getSongById(songId: string): Promise<Song | null> {
@@ -124,7 +124,7 @@ export async function searchSongs(query: string): Promise<Song[]> {
   })
   const payload = unwrapResponse<PageResponse<PublicSongResponse>>(response)
 
-  return unwrapPage(payload).map(normalizeSong).filter((song) => song.status === 'PUBLISHED')
+  return unwrapPage(payload).map(normalizeSong).filter((song) => song.id && song.status === 'PUBLISHED')
 }
 
 export async function getSongsByCategory(categoryId: string): Promise<Song[]> {
@@ -133,14 +133,14 @@ export async function getSongsByCategory(categoryId: string): Promise<Song[]> {
   )
   const payload = unwrapResponse<PageResponse<PublicSongResponse>>(response)
 
-  return unwrapPage(payload).map(normalizeSong).filter((song) => song.status === 'PUBLISHED')
+  return unwrapPage(payload).map(normalizeSong).filter((song) => song.id && song.status === 'PUBLISHED')
 }
 
 export async function getSongsByTag(tagId: string): Promise<Song[]> {
   const response = await api.get<PageResponse<PublicSongResponse>>(`/public/tags/${tagId}/songs`)
   const payload = unwrapResponse<PageResponse<PublicSongResponse>>(response)
 
-  return unwrapPage(payload).map(normalizeSong).filter((song) => song.status === 'PUBLISHED')
+  return unwrapPage(payload).map(normalizeSong).filter((song) => song.id && song.status === 'PUBLISHED')
 }
 
 export async function recordSongPlay(songId: string, _userId?: string): Promise<Song | null> {
