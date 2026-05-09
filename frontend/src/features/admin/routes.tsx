@@ -1,10 +1,11 @@
 import type { RouteObject } from 'react-router-dom'
 
 import { AdminCategoriesPage, EditCategoryPage, NewCategoryPage } from '@/features/categories'
-import { AdminSongsPage, EditSongPage, NewSongPage } from '@/features/songs'
+import { EditSongPage, NewSongPage } from '@/features/songs'
 import { AdminTagsPage, EditTagPage, NewTagPage } from '@/features/tags'
 
 import { AdminDashboardPage } from './pages/AdminDashboardPage'
+import { ManageSongsPage } from './pages/ManageSongsPage'
 import { ManageUsersPage } from './pages/ManageUsersPage'
 
 export const adminRoutes: RouteObject[] = [
@@ -18,7 +19,7 @@ export const adminRoutes: RouteObject[] = [
   },
   {
     path: 'songs',
-    element: <AdminSongsPage />,
+    element: <ManageSongsPage />,
   },
   {
     path: 'songs/new',

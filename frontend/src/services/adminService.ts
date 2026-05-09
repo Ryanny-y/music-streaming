@@ -1,8 +1,11 @@
-import { categories, favorites, listeningHistory, songs, tags } from '@/mocks/musicData'
+import { categories, songs, tags } from '@/mocks/musicData'
 import {
   getAdminDashboard as getBackendAdminDashboard,
+  deleteSong as deleteBackendSong,
+  getSongs as getBackendSongs,
   getUserById as getBackendUserById,
   getUsers as getBackendUsers,
+  updateSongStatus as updateBackendSongStatus,
   updateUserRole as updateBackendUserRole,
   updateUserStatus as updateBackendUserStatus,
 } from '@/features/admin/services/adminService'
@@ -42,7 +45,7 @@ export async function getUserById(userId: string): Promise<User> {
 }
 
 export async function getSongs(): Promise<Song[]> {
-  return mockResolve(songs)
+  return getBackendSongs()
 }
 
 export async function createSong(payload: SongPayload): Promise<Song> {
@@ -66,18 +69,11 @@ export async function updateSong(songId: string, payload: Partial<SongPayload>):
 }
 
 export async function deleteSong(songId: string): Promise<void> {
-  removeById(songs, songId)
-  removeWhere(favorites, (favorite) => favorite.songId === songId)
-  removeWhere(listeningHistory, (history) => history.songId === songId)
-
-  return mockResolve(undefined)
+  return deleteBackendSong(songId)
 }
 
 export async function updateSongStatus(songId: string, status: SongStatus): Promise<Song> {
-  const song = findSong(songId)
-  song.status = status
-
-  return mockMutate(song)
+  return updateBackendSongStatus(songId, status)
 }
 
 export async function getCategories(): Promise<Category[]> {
@@ -175,17 +171,5 @@ function removeById<T extends { id: string }>(items: T[], id: string): void {
 
   if (itemIndex >= 0) {
     items.splice(itemIndex, 1)
-  }
-}
-
-function removeWhere<T>(items: T[], predicate: (item: T) => boolean): void {
-  let itemIndex = items.length
-
-  while (itemIndex > 0) {
-    itemIndex -= 1
-
-    if (predicate(items[itemIndex])) {
-      items.splice(itemIndex, 1)
-    }
   }
 }

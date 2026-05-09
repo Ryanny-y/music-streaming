@@ -1,5 +1,5 @@
 import { api, unwrapResponse } from '@/lib/api'
-import type { AdminDashboard, ApiUserRole, Song, User } from '@/types'
+import type { AdminDashboard, ApiUserRole, Song, SongStatus, User } from '@/types'
 
 type AdminSongResponse = {
   songId: string
@@ -139,4 +139,22 @@ export async function updateUserRole(userId: string, role: ApiUserRole): Promise
   const user = unwrapResponse<AdminUserResponse>(response)
 
   return normalizeUser(user)
+}
+
+export async function getSongs(): Promise<Song[]> {
+  const response = await api.get<PageResponse<AdminSongResponse>>('/admin/songs')
+  const payload = unwrapResponse<PageResponse<AdminSongResponse>>(response)
+
+  return unwrapPage(payload).map(normalizeSong)
+}
+
+export async function deleteSong(songId: string): Promise<void> {
+  await api.delete(`/admin/songs/${songId}`)
+}
+
+export async function updateSongStatus(songId: string, status: SongStatus): Promise<Song> {
+  const response = await api.patch<AdminSongResponse>(`/admin/songs/${songId}/status`, { status })
+  const song = unwrapResponse<AdminSongResponse>(response)
+
+  return normalizeSong(song)
 }
