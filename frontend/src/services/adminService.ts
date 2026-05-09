@@ -1,26 +1,30 @@
-import { tags } from '@/mocks/musicData'
 import {
   getAdminDashboard as getBackendAdminDashboard,
   createSong as createBackendSong,
   createCategory as createBackendCategory,
+  createTag as createBackendTag,
   deleteCategory as deleteBackendCategory,
   deleteSong as deleteBackendSong,
+  deleteTag as deleteBackendTag,
   getCategories as getBackendCategories,
   getCategoryById as getBackendCategoryById,
   getSongById as getBackendSongById,
   getSongs as getBackendSongs,
   getTags as getBackendTags,
+  getTagById as getBackendTagById,
   getUserById as getBackendUserById,
   getUsers as getBackendUsers,
   updateSong as updateBackendSong,
   updateSongStatus as updateBackendSongStatus,
   updateCategory as updateBackendCategory,
+  updateTag as updateBackendTag,
   updateUserRole as updateBackendUserRole,
   updateUserStatus as updateBackendUserStatus,
   uploadSongAudio as uploadBackendSongAudio,
   uploadSongCover as uploadBackendSongCover,
   type AdminSongPayload,
   type AdminCategoryPayload,
+  type AdminTagPayload,
 } from '@/features/admin/services/adminService'
 import type {
   AdminDashboard,
@@ -29,11 +33,8 @@ import type {
   Song,
   SongStatus,
   Tag,
-  TagPayload,
   User,
 } from '@/types'
-
-import { mockMutate, mockResolve } from './mockApi'
 
 export async function getAdminDashboard(): Promise<AdminDashboard> {
   return getBackendAdminDashboard()
@@ -111,46 +112,18 @@ export async function getTags(): Promise<Tag[]> {
   return getBackendTags()
 }
 
-export async function createTag(payload: TagPayload): Promise<Tag> {
-  const tag: Tag = {
-    ...payload,
-    id: `tag-${Date.now()}`,
-    songCount: 0,
-  }
-
-  tags.push(tag)
-
-  return mockMutate(tag)
+export async function getTagById(tagId: string): Promise<Tag> {
+  return getBackendTagById(tagId)
 }
 
-export async function updateTag(tagId: string, payload: Partial<TagPayload>): Promise<Tag> {
-  const tag = findTag(tagId)
+export async function createTag(payload: AdminTagPayload): Promise<Tag> {
+  return createBackendTag(payload)
+}
 
-  Object.assign(tag, payload)
-
-  return mockMutate(tag)
+export async function updateTag(tagId: string, payload: AdminTagPayload): Promise<Tag> {
+  return updateBackendTag(tagId, payload)
 }
 
 export async function deleteTag(tagId: string): Promise<void> {
-  removeById(tags, tagId)
-
-  return mockResolve(undefined)
-}
-
-function findTag(tagId: string): Tag {
-  const tag = tags.find((item) => item.id === tagId)
-
-  if (!tag) {
-    throw new Error('Tag not found')
-  }
-
-  return tag
-}
-
-function removeById<T extends { id: string }>(items: T[], id: string): void {
-  const itemIndex = items.findIndex((item) => item.id === id)
-
-  if (itemIndex >= 0) {
-    items.splice(itemIndex, 1)
-  }
+  return deleteBackendTag(tagId)
 }

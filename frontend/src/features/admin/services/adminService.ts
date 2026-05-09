@@ -19,6 +19,10 @@ export type AdminCategoryPayload = {
   description: string
 }
 
+export type AdminTagPayload = {
+  name: string
+}
+
 type AdminSongResponse = {
   songId: string
   title: string
@@ -291,4 +295,29 @@ export async function getTags(): Promise<Tag[]> {
   const payload = unwrapResponse<PageResponse<AdminTagResponse>>(response)
 
   return unwrapPage(payload).map(normalizeTag)
+}
+
+export async function getTagById(tagId: string): Promise<Tag> {
+  const response = await api.get<AdminTagResponse>(`/admin/tags/${tagId}`)
+  const tag = unwrapResponse<AdminTagResponse>(response)
+
+  return normalizeTag(tag)
+}
+
+export async function createTag(payload: AdminTagPayload): Promise<Tag> {
+  const response = await api.post<AdminTagResponse>('/admin/tags', payload)
+  const tag = unwrapResponse<AdminTagResponse>(response)
+
+  return normalizeTag(tag)
+}
+
+export async function updateTag(tagId: string, payload: AdminTagPayload): Promise<Tag> {
+  const response = await api.put<AdminTagResponse>(`/admin/tags/${tagId}`, payload)
+  const tag = unwrapResponse<AdminTagResponse>(response)
+
+  return normalizeTag(tag)
+}
+
+export async function deleteTag(tagId: string): Promise<void> {
+  await api.delete(`/admin/tags/${tagId}`)
 }

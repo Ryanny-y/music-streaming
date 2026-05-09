@@ -2,11 +2,12 @@ import type { RouteObject } from 'react-router-dom'
 
 import { EditCategoryPage, NewCategoryPage } from '@/features/categories'
 import { EditSongPage, NewSongPage } from '@/features/songs'
-import { AdminTagsPage, EditTagPage, NewTagPage } from '@/features/tags'
+import { EditTagPage, NewTagPage } from '@/features/tags'
 
 import { AdminDashboardPage } from './pages/AdminDashboardPage'
 import { ManageCategoriesPage } from './pages/ManageCategoriesPage'
 import { ManageSongsPage } from './pages/ManageSongsPage'
+import { ManageTagsPage } from './pages/ManageTagsPage'
 import { ManageUsersPage } from './pages/ManageUsersPage'
 
 export const adminRoutes: RouteObject[] = [
@@ -44,7 +45,7 @@ export const adminRoutes: RouteObject[] = [
   },
   {
     path: 'tags',
-    element: <AdminTagsPage />,
+    element: <ManageTagsPage />,
   },
   {
     path: 'tags/new',
