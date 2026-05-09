@@ -19,8 +19,10 @@ type AuthTokens = {
   refreshToken?: string
 }
 
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:8080/api'
+
 export const api = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL,
+  baseURL: API_BASE_URL,
 })
 
 function clearAuthStorage(): void {
@@ -82,7 +84,7 @@ api.interceptors.response.use(
       const refreshResponse = await axios.post<AuthTokens | WrappedResponse<AuthTokens>>(
         '/auth/refresh-token',
         { refreshToken },
-        { baseURL: import.meta.env.VITE_API_BASE_URL },
+        { baseURL: API_BASE_URL },
       )
       const refreshedAuth = unwrapResponse<AuthTokens>(refreshResponse)
 
