@@ -1,8 +1,9 @@
 import type { RouteObject } from 'react-router-dom'
 
-import { AppCategoriesPage, CategoryDetailsPage } from '@/features/categories'
 import { AppTagsPage, TagDetailsPage } from '@/features/tags'
 
+import { CategoriesPage } from './pages/CategoriesPage'
+import { CategorySongsPage } from './pages/CategorySongsPage'
 import { DashboardPage } from './pages/DashboardPage'
 import { FavoritesPage } from './pages/FavoritesPage'
 import { LibraryPage } from './pages/LibraryPage'
@@ -39,11 +40,11 @@ export const userRoutes: RouteObject[] = [
   },
   {
     path: 'categories',
-    element: <AppCategoriesPage />,
+    element: <CategoriesPage />,
   },
   {
     path: 'categories/:categoryId',
-    element: <CategoryDetailsPage />,
+    element: <CategorySongsPage />,
   },
   {
     path: 'tags',

@@ -8,6 +8,7 @@ type SongListProps = {
   songs: Song[]
   showFavorite?: boolean
   favoriteSongIds?: string[]
+  onOpen?: (song: Song) => void
   onPlay?: (song: Song) => void
   onFavoriteToggle?: (song: Song) => void
   className?: string
@@ -16,6 +17,7 @@ type SongListProps = {
 export function SongList({
   className,
   favoriteSongIds = [],
+  onOpen,
   onFavoriteToggle,
   onPlay,
   showFavorite = false,
@@ -37,13 +39,28 @@ export function SongList({
 
           return (
             <div
-              className="grid gap-4 px-4 py-3 md:grid-cols-[3rem_1fr_12rem_8rem_5rem] md:items-center"
+              className={cn(
+                'grid gap-4 px-4 py-3 md:grid-cols-[3rem_1fr_12rem_8rem_5rem] md:items-center',
+                onOpen && 'cursor-pointer transition hover:bg-secondary/50',
+              )}
               key={song.id}
+              role={onOpen ? 'button' : undefined}
+              tabIndex={onOpen ? 0 : undefined}
+              onClick={() => onOpen?.(song)}
+              onKeyDown={(event) => {
+                if (onOpen && (event.key === 'Enter' || event.key === ' ')) {
+                  event.preventDefault()
+                  onOpen(song)
+                }
+              }}
             >
               <button
                 className="hidden size-10 items-center justify-center rounded-full bg-primary text-primary-foreground md:flex"
                 type="button"
-                onClick={() => onPlay?.(song)}
+                onClick={(event) => {
+                  event.stopPropagation()
+                  onPlay?.(song)
+                }}
                 aria-label={`Play ${song.title}`}
               >
                 <Play className="size-4 fill-current" aria-hidden="true" />
@@ -69,7 +86,15 @@ export function SongList({
               <p className="text-sm text-muted-foreground">{formatDuration(song.duration)}</p>
 
               <div className="flex items-center gap-2">
-                <Button className="md:hidden" size="sm" type="button" onClick={() => onPlay?.(song)}>
+                <Button
+                  className="md:hidden"
+                  size="sm"
+                  type="button"
+                  onClick={(event) => {
+                    event.stopPropagation()
+                    onPlay?.(song)
+                  }}
+                >
                   <Play className="size-4 fill-current" aria-hidden="true" />
                   Play
                 </Button>
@@ -78,7 +103,10 @@ export function SongList({
                     variant="ghost"
                     size="icon"
                     type="button"
-                    onClick={() => onFavoriteToggle?.(song)}
+                    onClick={(event) => {
+                      event.stopPropagation()
+                      onFavoriteToggle?.(song)
+                    }}
                     aria-label={`${isFavorite ? 'Remove from' : 'Add to'} favorites`}
                   >
                     <Heart className={cn('size-4', isFavorite && 'fill-current text-primary')} aria-hidden="true" />
