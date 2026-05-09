@@ -12,9 +12,13 @@ import org.mapstruct.ReportingPolicy;
 @Mapper(componentModel = "spring", unmappedTargetPolicy = ReportingPolicy.IGNORE)
 public interface UserMapper {
 
+	@Mapping(target = "id", source = "userId")
+	@Mapping(target = "isActive", source = "active")
 	@Mapping(target = "role", expression = "java(toRoleName(user.getRole()))")
 	UserResponse toResponse(User user);
 
+	@Mapping(target = "id", source = "userId")
+	@Mapping(target = "isActive", source = "active")
 	@Mapping(target = "role", expression = "java(toRoleName(user.getRole()))")
 	AdminUserResponse toAdminResponse(User user);
 

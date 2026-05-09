@@ -6,7 +6,8 @@ type PageResponse<T> = {
 }
 
 type PublicTagResponse = {
-  tagId: string
+  id: string
+  tagId?: string
   name: string
   songCount?: number | null
   createdAt?: string | null
@@ -15,7 +16,7 @@ type PublicTagResponse = {
 
 function normalizeTag(tag: PublicTagResponse): Tag {
   return {
-    id: tag.tagId,
+    id: tag.id ?? tag.tagId,
     name: tag.name,
     songCount: tag.songCount ?? 0,
   }

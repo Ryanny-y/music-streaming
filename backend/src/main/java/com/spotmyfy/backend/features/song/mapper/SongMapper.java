@@ -16,13 +16,16 @@ import org.mapstruct.ReportingPolicy;
 @Mapper(componentModel = "spring", unmappedTargetPolicy = ReportingPolicy.IGNORE)
 public interface SongMapper {
 
-	@Mapping(target = "categoryName", expression = "java(toCategoryName(song.getCategory()))")
-	@Mapping(target = "tagNames", expression = "java(toTagNames(song.getTags()))")
-	SongResponse toResponse(Song song);
-
+	@Mapping(target = "id", source = "songId")
 	@Mapping(target = "categoryId", expression = "java(toCategoryId(song.getCategory()))")
 	@Mapping(target = "categoryName", expression = "java(toCategoryName(song.getCategory()))")
-	@Mapping(target = "tagNames", expression = "java(toTagNames(song.getTags()))")
+	@Mapping(target = "tags", expression = "java(toTagNames(song.getTags()))")
+	SongResponse toResponse(Song song);
+
+	@Mapping(target = "id", source = "songId")
+	@Mapping(target = "categoryId", expression = "java(toCategoryId(song.getCategory()))")
+	@Mapping(target = "categoryName", expression = "java(toCategoryName(song.getCategory()))")
+	@Mapping(target = "tags", expression = "java(toTagNames(song.getTags()))")
 	SongDetailsResponse toDetailsResponse(Song song);
 
 	default UUID toCategoryId(Category category) {

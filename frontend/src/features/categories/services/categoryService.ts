@@ -6,7 +6,8 @@ type PageResponse<T> = {
 }
 
 type PublicCategoryResponse = {
-  categoryId: string
+  id: string
+  categoryId?: string
   name: string
   description?: string | null
   songCount?: number | null
@@ -16,7 +17,7 @@ type PublicCategoryResponse = {
 
 function normalizeCategory(category: PublicCategoryResponse): Category {
   return {
-    id: category.categoryId,
+    id: category.id ?? category.categoryId,
     name: category.name,
     description: category.description ?? '',
     songCount: category.songCount ?? 0,

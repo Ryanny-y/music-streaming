@@ -24,7 +24,8 @@ export type AdminTagPayload = {
 }
 
 type AdminSongResponse = {
-  songId: string
+  id: string
+  songId?: string
   title: string
   artist: string
   album?: string | null
@@ -36,6 +37,7 @@ type AdminSongResponse = {
   releaseDate?: string | null
   categoryId?: string | null
   categoryName?: string | null
+  tags?: string[]
   tagNames?: string[]
   status: Song['status']
   playCount?: number | null
@@ -53,18 +55,21 @@ type PageResponse<T> = {
 }
 
 type AdminUserResponse = {
-  userId: string
+  id: string
+  userId?: string
   fullName: string
   username: string
   email: string
   role: ApiUserRole
-  active: boolean
+  isActive?: boolean
+  active?: boolean
   createdAt: string
   updatedAt?: string | null
 }
 
 type AdminCategoryResponse = {
-  categoryId: string
+  id: string
+  categoryId?: string
   name: string
   description?: string | null
   songCount?: number | null
@@ -73,7 +78,8 @@ type AdminCategoryResponse = {
 }
 
 type AdminTagResponse = {
-  tagId: string
+  id: string
+  tagId?: string
   name: string
   songCount?: number | null
   createdAt?: string | null
@@ -100,7 +106,7 @@ function normalizeDuration(duration: AdminSongResponse['duration']): number {
 
 function normalizeSong(song: AdminSongResponse): Song {
   return {
-    id: song.songId,
+    id: song.id ?? song.songId,
     title: song.title,
     artist: song.artist,
     album: song.album ?? '',
@@ -112,7 +118,7 @@ function normalizeSong(song: AdminSongResponse): Song {
     releaseDate: song.releaseDate ?? '',
     categoryId: song.categoryId ?? '',
     categoryName: song.categoryName ?? '',
-    tags: song.tagNames ?? [],
+    tags: song.tags ?? song.tagNames ?? [],
     status: song.status,
     playCount: song.playCount ?? 0,
     createdAt: song.createdAt ?? undefined,
@@ -122,19 +128,19 @@ function normalizeSong(song: AdminSongResponse): Song {
 
 function normalizeUser(user: AdminUserResponse): User {
   return {
-    id: user.userId,
+    id: user.id ?? user.userId,
     fullName: user.fullName,
     username: user.username,
     email: user.email,
     role: user.role,
-    isActive: user.active,
+    isActive: user.isActive ?? user.active ?? false,
     createdAt: user.createdAt,
   }
 }
 
 function normalizeCategory(category: AdminCategoryResponse): Category {
   return {
-    id: category.categoryId,
+    id: category.id ?? category.categoryId,
     name: category.name,
     description: category.description ?? '',
     songCount: category.songCount ?? 0,
@@ -145,7 +151,7 @@ function normalizeCategory(category: AdminCategoryResponse): Category {
 
 function normalizeTag(tag: AdminTagResponse): Tag {
   return {
-    id: tag.tagId,
+    id: tag.id ?? tag.tagId,
     name: tag.name,
     songCount: tag.songCount ?? 0,
   }

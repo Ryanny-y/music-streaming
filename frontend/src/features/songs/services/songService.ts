@@ -8,7 +8,8 @@ type PageResponse<T> = {
 }
 
 type PublicSongResponse = {
-  songId: string
+  id: string
+  songId?: string
   title: string
   artist: string
   album?: string | null
@@ -20,6 +21,7 @@ type PublicSongResponse = {
   releaseDate?: string | null
   categoryId?: string | null
   categoryName?: string | null
+  tags?: string[]
   tagNames?: string[]
   status: Song['status']
   playCount?: number | null
@@ -47,7 +49,7 @@ function normalizeDuration(duration: PublicSongResponse['duration']): number {
 
 function normalizeSong(song: PublicSongResponse): Song {
   return {
-    id: song.songId,
+    id: song.id ?? song.songId,
     title: song.title,
     artist: song.artist,
     album: song.album ?? '',
@@ -59,7 +61,7 @@ function normalizeSong(song: PublicSongResponse): Song {
     releaseDate: song.releaseDate ?? '',
     categoryId: song.categoryId ?? '',
     categoryName: song.categoryName ?? '',
-    tags: song.tagNames ?? [],
+    tags: song.tags ?? song.tagNames ?? [],
     status: song.status,
     playCount: song.playCount ?? 0,
     createdAt: song.createdAt ?? undefined,

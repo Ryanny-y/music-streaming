@@ -1,12 +1,10 @@
 package com.spotmyfy.backend.features.tag.dto;
 
-import java.time.LocalDateTime;
 import java.util.UUID;
 
 public record TagResponse(
-	UUID tagId,
+	UUID id,
 	String name,
-	LocalDateTime createdAt,
-	LocalDateTime updatedAt
+	int songCount
 ) {
 }

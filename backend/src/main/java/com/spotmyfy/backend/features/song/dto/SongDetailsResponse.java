@@ -7,7 +7,7 @@ import java.util.Set;
 import java.util.UUID;
 
 public record SongDetailsResponse(
-	UUID songId,
+	UUID id,
 	String title,
 	String artist,
 	String album,
@@ -19,10 +19,9 @@ public record SongDetailsResponse(
 	LocalDate releaseDate,
 	UUID categoryId,
 	String categoryName,
-	Set<String> tagNames,
+	Set<String> tags,
 	SongStatus status,
 	Long playCount,
-	LocalDateTime createdAt,
-	LocalDateTime updatedAt
+	LocalDateTime createdAt
 ) {
 }
