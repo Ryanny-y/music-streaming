@@ -7,29 +7,64 @@ import { usePlayback } from '@/features/user/usePlayback'
 import { userService } from '@/services'
 import type { Song } from '@/types'
 
+function getErrorMessage(error: unknown): string {
+  return error instanceof Error ? error.message : 'Unable to load favorites right now.'
+}
+
 export function FavoritesPage() {
   const { user } = useAuth()
   const { playSong } = usePlayback()
   const [favorites, setFavorites] = useState<Song[]>([])
   const [isLoading, setIsLoading] = useState(true)
+  const [errorMessage, setErrorMessage] = useState<string | null>(null)
   const navigate = useNavigate()
 
   useEffect(() => {
+    let isMounted = true
+
     if (!user) {
+      setIsLoading(false)
       return
     }
 
+    setIsLoading(true)
+    setErrorMessage(null)
+
     userService
       .getFavorites(user.id)
-      .then(setFavorites)
-      .finally(() => setIsLoading(false))
+      .then((favoriteSongs) => {
+        if (isMounted) {
+          setFavorites(favoriteSongs)
+        }
+      })
+      .catch((error: unknown) => {
+        if (!isMounted) {
+          return
+        }
+
+        setFavorites([])
+        setErrorMessage(getErrorMessage(error))
+      })
+      .finally(() => {
+        if (isMounted) {
+          setIsLoading(false)
+        }
+      })
+
+    return () => {
+      isMounted = false
+    }
   }, [user])
 
   const removeFavorite = async (song: Song) => {
     if (!user) return
 
-    await userService.removeFavorite(user.id, song.id)
-    setFavorites((items) => items.filter((item) => item.id !== song.id))
+    try {
+      await userService.removeFavorite(user.id, song.id)
+      setFavorites((items) => items.filter((item) => item.id !== song.id))
+    } catch (error: unknown) {
+      setErrorMessage(getErrorMessage(error))
+    }
   }
 
   return (
@@ -42,6 +77,8 @@ export function FavoritesPage() {
 
       {isLoading ? (
         <LoadingState label="Loading favorites" />
+      ) : errorMessage ? (
+        <EmptyState title="Could not load favorites" description={errorMessage} />
       ) : favorites.length === 0 ? (
         <EmptyState title="No favorite songs yet" description="Favorite songs from the player or library to see them here." />
       ) : (

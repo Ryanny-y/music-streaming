@@ -34,7 +34,7 @@ type BackendSongResponse = {
   categoryName?: string | null
   tags?: string[]
   tagNames?: string[]
-  status: Song['status']
+  status?: Song['status'] | null
   playCount?: number | null
   createdAt?: string | null
   updatedAt?: string | null
@@ -115,7 +115,7 @@ function normalizeSong(song: BackendSongResponse): Song {
     categoryId: song.categoryId ?? '',
     categoryName: song.categoryName ?? '',
     tags: song.tags ?? song.tagNames ?? [],
-    status: song.status,
+    status: song.status ?? 'PUBLISHED',
     playCount: song.playCount ?? 0,
     createdAt: song.createdAt ?? undefined,
     updatedAt: song.updatedAt ?? undefined,
