@@ -43,6 +43,11 @@ export function AuthProvider({ children }: PropsWithChildren) {
     return registeredUser
   }, [])
 
+  const updateUser = useCallback((updatedUser: User) => {
+    authService.storeAuthUser(updatedUser)
+    setUser(updatedUser)
+  }, [])
+
   const value = useMemo<AuthContextValue>(
     () => ({
       user,
@@ -51,8 +56,9 @@ export function AuthProvider({ children }: PropsWithChildren) {
       login,
       register,
       logout,
+      updateUser,
     }),
-    [isLoading, login, logout, register, user],
+    [isLoading, login, logout, register, updateUser, user],
   )
 
   return <AuthContext value={value}>{children}</AuthContext>

@@ -43,6 +43,10 @@ function readStoredUser(): User | null {
   }
 }
 
+export function storeAuthUser(user: User): void {
+  localStorage.setItem(AUTH_USER_KEY, JSON.stringify(user))
+}
+
 export function getAuthErrorMessage(error: unknown): string {
   if (isAxiosError<BackendErrorResponse>(error)) {
     return error.response?.data?.message ?? error.response?.data?.error ?? 'Unable to login'

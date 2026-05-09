@@ -140,6 +140,31 @@ function normalizeUser(user: BackendUserResponse): User {
   }
 }
 
+export function getUserValidationMessages(error: unknown, fallbackMessage: string): string[] {
+  if (
+    error &&
+    typeof error === 'object' &&
+    'response' in error &&
+    error.response &&
+    typeof error.response === 'object' &&
+    'data' in error.response
+  ) {
+    const data = error.response.data as {
+      message?: string
+      error?: string
+      validationErrors?: Record<string, string>
+    }
+
+    if (data.validationErrors) {
+      return Object.values(data.validationErrors)
+    }
+
+    return [data.message ?? data.error ?? fallbackMessage]
+  }
+
+  return [error instanceof Error ? error.message : fallbackMessage]
+}
+
 function unwrapPage<T>(payload: PageResponse<T> | T[]): T[] {
   return Array.isArray(payload) ? payload : payload.content ?? []
 }
@@ -300,6 +325,13 @@ export async function getListeningHistoryItems(): Promise<ListeningHistoryItem[]
       playedAt: item.playedAt,
     }))
     .filter((item) => item.song.id)
+}
+
+export async function getProfile(): Promise<User> {
+  const response = await api.get<BackendUserResponse>('/users/me')
+  const user = unwrapResponse<BackendUserResponse>(response)
+
+  return normalizeUser(user)
 }
 
 export async function updateProfile(_userId: string, payload: UpdateProfilePayload): Promise<User> {
