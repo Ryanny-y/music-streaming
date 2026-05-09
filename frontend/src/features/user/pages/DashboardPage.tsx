@@ -1,87 +1,132 @@
-import { Heart, History, Music2 } from 'lucide-react'
+import { Headphones, Heart, History, Music2 } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 
 import { CategoryCard, EmptyState, LoadingState, PageHeader, SongCard, StatCard } from '@/components/common'
 import { useAuth } from '@/features/auth'
 import { usePlayback } from '@/features/user/usePlayback'
-import { categoryService, songService, userService } from '@/services'
-import type { Category, Song, UserDashboard } from '@/types'
+import { categoryService, userService } from '@/services'
+import type { Category, Song } from '@/types'
+
+function getErrorMessage(error: unknown): string {
+  return error instanceof Error ? error.message : 'Unable to load your dashboard right now.'
+}
 
 export function DashboardPage() {
   const { user } = useAuth()
   const { playSong } = usePlayback()
-  const [dashboard, setDashboard] = useState<UserDashboard | null>(null)
-  const [songs, setSongs] = useState<Song[]>([])
+  const [dashboard, setDashboard] = useState<userService.UserDashboardData | null>(null)
   const [categories, setCategories] = useState<Category[]>([])
   const [isLoading, setIsLoading] = useState(true)
+  const [errorMessage, setErrorMessage] = useState<string | null>(null)
   const navigate = useNavigate()
 
   useEffect(() => {
+    let isMounted = true
+
     if (!user) {
+      setIsLoading(false)
       return
     }
 
-    Promise.all([
-      userService.getUserDashboard(user.id),
-      songService.getPublishedSongs(),
-      categoryService.getCategories(),
-    ])
-      .then(([userDashboard, publishedSongs, musicCategories]) => {
+    setIsLoading(true)
+    setErrorMessage(null)
+
+    Promise.all([userService.getUserDashboard(user), categoryService.getCategories().catch(() => [])])
+      .then(([userDashboard, musicCategories]) => {
+        if (!isMounted) {
+          return
+        }
+
         setDashboard(userDashboard)
-        setSongs(publishedSongs)
         setCategories(musicCategories)
       })
-      .finally(() => setIsLoading(false))
+      .catch((error: unknown) => {
+        if (!isMounted) {
+          return
+        }
+
+        setDashboard(null)
+        setCategories([])
+        setErrorMessage(getErrorMessage(error))
+      })
+      .finally(() => {
+        if (isMounted) {
+          setIsLoading(false)
+        }
+      })
+
+    return () => {
+      isMounted = false
+    }
   }, [user])
 
   if (isLoading) {
     return <LoadingState label="Loading dashboard" />
   }
 
-  const recommendedSongs = songs
-    .filter((song) => !dashboard?.favorites.some((favorite) => favorite.id === song.id))
-    .sort((a, b) => b.playCount - a.playCount)
-    .slice(0, 4)
+  if (errorMessage || !dashboard) {
+    return (
+      <EmptyState
+        title="Could not load dashboard"
+        description={errorMessage || 'Dashboard data is unavailable.'}
+      />
+    )
+  }
+
+  const userName = dashboard.user.fullName || user?.fullName || 'listener'
 
   return (
     <div className="space-y-10">
       <PageHeader
         eyebrow="Welcome back"
-        title={`Hi, ${user?.fullName ?? 'listener'}`}
+        title={`Hi, ${userName}`}
         description="Pick up where you left off, revisit favorites, or discover something new."
       />
 
-      <section className="grid gap-4 md:grid-cols-3">
-        <StatCard title="Favorite songs" value={dashboard?.favoriteCount ?? 0} icon={<Heart className="size-5" />} />
+      <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+        <StatCard title="Favorite songs" value={dashboard.favoriteCount} icon={<Heart className="size-5" />} />
+        <StatCard title="Played songs" value={dashboard.totalPlayedSongs} icon={<Headphones className="size-5" />} />
         <StatCard
-          title="Recently played"
-          value={dashboard?.listeningHistoryCount ?? 0}
+          title="History entries"
+          value={dashboard.listeningHistoryCount}
           icon={<History className="size-5" />}
         />
-        <StatCard title="Available songs" value={songs.length} icon={<Music2 className="size-5" />} />
+        <StatCard title="Available songs" value={dashboard.availableSongCount} icon={<Music2 className="size-5" />} />
       </section>
 
       <SongSection
         title="Recently Played"
-        songs={dashboard?.recentlyPlayed ?? []}
+        songs={dashboard.recentlyPlayed}
         emptyTitle="No listening history yet"
+        emptyDescription="Songs will appear here after you press play."
         onOpen={(song) => navigate(`/app/songs/${song.id}`)}
         onPlay={playSong}
       />
 
       <SongSection
         title="Favorite Songs"
-        songs={dashboard?.favorites ?? []}
+        songs={dashboard.favorites}
         emptyTitle="No favorites yet"
+        emptyDescription="Favorite songs from the player or library to see them here."
         onOpen={(song) => navigate(`/app/songs/${song.id}`)}
         onPlay={playSong}
       />
 
       <SongSection
         title="Recommended Songs"
-        songs={recommendedSongs}
+        songs={dashboard.recommendedSongs}
         emptyTitle="No recommendations yet"
+        emptyDescription="Recommendations will appear as more songs become available."
+        onOpen={(song) => navigate(`/app/songs/${song.id}`)}
+        onPlay={playSong}
+      />
+
+      <SongSection
+        title="Latest Songs"
+        songs={dashboard.latestSongs}
+        emptyTitle="No latest songs yet"
+        emptyDescription="Newly published songs will appear here."
         onOpen={(song) => navigate(`/app/songs/${song.id}`)}
         onPlay={playSong}
       />
@@ -106,11 +151,12 @@ type SongSectionProps = {
   title: string
   songs: Song[]
   emptyTitle: string
+  emptyDescription: string
   onOpen: (song: Song) => void
   onPlay: (song: Song) => void
 }
 
-function SongSection({ emptyTitle, onOpen, onPlay, songs, title }: SongSectionProps) {
+function SongSection({ emptyDescription, emptyTitle, onOpen, onPlay, songs, title }: SongSectionProps) {
   return (
     <section className="space-y-5">
       <PageHeader title={title} />
@@ -121,7 +167,7 @@ function SongSection({ emptyTitle, onOpen, onPlay, songs, title }: SongSectionPr
           ))}
         </div>
       ) : (
-        <EmptyState title={emptyTitle} description="Songs will appear here as you use the app." />
+        <EmptyState title={emptyTitle} description={emptyDescription} />
       )}
     </section>
   )

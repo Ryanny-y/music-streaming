@@ -1,90 +1,291 @@
-import { favorites, listeningHistory, songs, users } from '@/mocks/musicData'
-import type { Favorite, ListeningHistory, Song, UpdateProfilePayload, User, UserDashboard } from '@/types'
+import { api, unwrapResponse } from '@/lib/api'
+import type { Favorite, ListeningHistory, Song, UpdateProfilePayload, User } from '@/types'
 
-import { mockMutate, mockResolve } from './mockApi'
+type PageResponse<T> = {
+  content?: T[]
+}
 
-const byMostRecentHistory = (a: ListeningHistory, b: ListeningHistory) =>
-  new Date(b.playedAt).getTime() - new Date(a.playedAt).getTime()
+type BackendUserResponse = {
+  id?: string
+  userId?: string
+  fullName: string
+  username: string
+  email: string
+  role: User['role']
+  isActive?: boolean
+  active?: boolean
+  createdAt: string
+}
 
-const getSongsFromIds = (songIds: string[]): Song[] =>
-  songIds
-    .map((songId) => songs.find((song) => song.id === songId))
-    .filter((song): song is Song => Boolean(song))
+type BackendSongResponse = {
+  id?: string
+  songId?: string
+  title: string
+  artist: string
+  album?: string | null
+  description?: string | null
+  lyrics?: string | null
+  audioUrl?: string | null
+  coverImageUrl?: string | null
+  duration?: string | number | null
+  releaseDate?: string | null
+  categoryId?: string | null
+  categoryName?: string | null
+  tags?: string[]
+  tagNames?: string[]
+  status: Song['status']
+  playCount?: number | null
+  createdAt?: string | null
+  updatedAt?: string | null
+}
 
-export async function getUserDashboard(userId: string): Promise<UserDashboard> {
-  const user = users.find((item) => item.id === userId)
+type BackendFavoriteResponse = {
+  id: string
+  song: BackendSongResponse
+  createdAt: string
+}
 
-  if (!user) {
-    throw new Error('User not found')
+type BackendHistoryResponse = {
+  id: string
+  song: BackendSongResponse
+  playedAt: string
+}
+
+type BackendDashboardResponse = {
+  user?: BackendUserResponse
+  favoriteCount?: number
+  totalFavorites?: number
+  listeningHistoryCount?: number
+  totalListeningHistory?: number
+  totalPlayedSongs?: number
+  availableSongCount?: number
+  recentlyPlayed?: BackendSongResponse[]
+  recentlyPlayedSongs?: BackendSongResponse[]
+  favorites?: BackendSongResponse[]
+  favoriteSongs?: BackendSongResponse[]
+  recommendedSongs?: BackendSongResponse[]
+  recommendations?: BackendSongResponse[]
+  latestSongs?: BackendSongResponse[]
+  latest?: BackendSongResponse[]
+}
+
+export type UserDashboardData = {
+  user: User
+  favoriteCount: number
+  listeningHistoryCount: number
+  totalPlayedSongs: number
+  availableSongCount: number
+  recentlyPlayed: Song[]
+  favorites: Song[]
+  recommendedSongs: Song[]
+  latestSongs: Song[]
+}
+
+function normalizeDuration(duration: BackendSongResponse['duration']): number {
+  if (typeof duration === 'number') {
+    return duration
   }
 
-  const userFavorites = favorites.filter((favorite) => favorite.userId === userId)
-  const userHistory = listeningHistory.filter((history) => history.userId === userId).sort(byMostRecentHistory)
+  if (!duration) {
+    return 0
+  }
 
-  return mockResolve({
-    user,
-    favoriteCount: userFavorites.length,
-    listeningHistoryCount: userHistory.length,
-    recentlyPlayed: getSongsFromIds(userHistory.slice(0, 5).map((history) => history.songId)),
-    favorites: getSongsFromIds(userFavorites.map((favorite) => favorite.songId)),
+  const parts = duration.split(':').map(Number)
+
+  if (parts.some(Number.isNaN)) {
+    return 0
+  }
+
+  return parts.reduce((total, part) => total * 60 + part, 0)
+}
+
+function normalizeSong(song: BackendSongResponse): Song {
+  return {
+    id: song.id ?? song.songId ?? '',
+    title: song.title,
+    artist: song.artist,
+    album: song.album ?? '',
+    description: song.description ?? '',
+    lyrics: song.lyrics ?? '',
+    audioUrl: song.audioUrl ?? '',
+    coverImageUrl: song.coverImageUrl ?? '',
+    duration: normalizeDuration(song.duration),
+    releaseDate: song.releaseDate ?? '',
+    categoryId: song.categoryId ?? '',
+    categoryName: song.categoryName ?? '',
+    tags: song.tags ?? song.tagNames ?? [],
+    status: song.status,
+    playCount: song.playCount ?? 0,
+    createdAt: song.createdAt ?? undefined,
+    updatedAt: song.updatedAt ?? undefined,
+  }
+}
+
+function normalizeUser(user: BackendUserResponse): User {
+  return {
+    id: user.id ?? user.userId ?? '',
+    fullName: user.fullName,
+    username: user.username,
+    email: user.email,
+    role: user.role,
+    isActive: user.isActive ?? user.active ?? true,
+    createdAt: user.createdAt,
+  }
+}
+
+function unwrapPage<T>(payload: PageResponse<T> | T[]): T[] {
+  return Array.isArray(payload) ? payload : payload.content ?? []
+}
+
+function normalizeSongs(songs: BackendSongResponse[] | undefined): Song[] {
+  return (songs ?? []).map(normalizeSong).filter((song) => Boolean(song.id))
+}
+
+function uniqueSongs(songs: Song[]): Song[] {
+  const seen = new Set<string>()
+
+  return songs.filter((song) => {
+    if (seen.has(song.id)) {
+      return false
+    }
+
+    seen.add(song.id)
+    return true
   })
 }
 
-export async function getFavorites(userId: string): Promise<Song[]> {
-  const favoriteSongIds = favorites
-    .filter((favorite) => favorite.userId === userId)
-    .map((favorite) => favorite.songId)
-
-  return mockResolve(getSongsFromIds(favoriteSongIds))
+function countUniqueSongs(songs: Song[]): number {
+  return uniqueSongs(songs).length
 }
 
-export async function addFavorite(userId: string, songId: string): Promise<Favorite> {
-  const existingFavorite = favorites.find(
-    (favorite) => favorite.userId === userId && favorite.songId === songId,
-  )
+function getSongList(
+  dashboard: BackendDashboardResponse,
+  ...keys: Array<keyof BackendDashboardResponse>
+): Song[] | null {
+  for (const key of keys) {
+    const value = dashboard[key]
 
-  if (existingFavorite) {
-    return mockResolve(existingFavorite)
+    if (Array.isArray(value)) {
+      return normalizeSongs(value as BackendSongResponse[])
+    }
   }
 
-  const favorite: Favorite = {
-    id: `fav-${Date.now()}`,
-    userId,
-    songId,
-    createdAt: new Date().toISOString(),
-  }
-
-  favorites.push(favorite)
-
-  return mockMutate(favorite)
+  return null
 }
 
-export async function removeFavorite(userId: string, songId: string): Promise<void> {
-  const favoriteIndex = favorites.findIndex(
-    (favorite) => favorite.userId === userId && favorite.songId === songId,
-  )
+async function getFavoriteItems(): Promise<BackendFavoriteResponse[]> {
+  const response = await api.get<PageResponse<BackendFavoriteResponse>>('/users/me/favorites')
+  const payload = unwrapResponse<PageResponse<BackendFavoriteResponse>>(response)
 
-  if (favoriteIndex >= 0) {
-    favorites.splice(favoriteIndex, 1)
+  return unwrapPage(payload)
+}
+
+async function getHistoryItems(): Promise<BackendHistoryResponse[]> {
+  const response = await api.get<PageResponse<BackendHistoryResponse>>('/users/me/history')
+  const payload = unwrapResponse<PageResponse<BackendHistoryResponse>>(response)
+
+  return unwrapPage(payload)
+}
+
+async function getPublicSongs(): Promise<Song[]> {
+  const response = await api.get<PageResponse<BackendSongResponse>>('/public/songs')
+  const payload = unwrapResponse<PageResponse<BackendSongResponse>>(response)
+
+  return unwrapPage(payload)
+    .map(normalizeSong)
+    .filter((song) => song.status === 'PUBLISHED')
+}
+
+export async function getUserDashboard(currentUser: User): Promise<UserDashboardData> {
+  const response = await api.get<BackendDashboardResponse>('/users/me/dashboard')
+  const dashboard = unwrapResponse<BackendDashboardResponse>(response)
+
+  const dashboardFavorites = getSongList(dashboard, 'favorites', 'favoriteSongs')
+  const dashboardRecentlyPlayed = getSongList(dashboard, 'recentlyPlayed', 'recentlyPlayedSongs')
+  const dashboardRecommendations = getSongList(dashboard, 'recommendedSongs', 'recommendations')
+  const dashboardLatestSongs = getSongList(dashboard, 'latestSongs', 'latest')
+
+  const needsFavorites = dashboardFavorites === null
+  const needsHistory = dashboardRecentlyPlayed === null
+  const needsPublicSongs = dashboardRecommendations === null || dashboardLatestSongs === null
+
+  const [favoriteItems, historyItems, publicSongs] = await Promise.all([
+    needsFavorites ? getFavoriteItems() : Promise.resolve([]),
+    needsHistory ? getHistoryItems() : Promise.resolve([]),
+    needsPublicSongs ? getPublicSongs() : Promise.resolve([]),
+  ])
+
+  const favorites = dashboardFavorites ?? favoriteItems.map((favorite) => normalizeSong(favorite.song))
+  const recentlyPlayed =
+    dashboardRecentlyPlayed ?? historyItems.map((history) => normalizeSong(history.song)).slice(0, 4)
+  const recommendedSongs =
+    dashboardRecommendations ??
+    publicSongs
+      .filter((song) => !favorites.some((favorite) => favorite.id === song.id))
+      .sort((a, b) => b.playCount - a.playCount)
+      .slice(0, 4)
+  const latestSongs =
+    dashboardLatestSongs ??
+    [...publicSongs]
+      .sort(
+        (a, b) =>
+          new Date(b.createdAt ?? b.releaseDate).getTime() -
+          new Date(a.createdAt ?? a.releaseDate).getTime(),
+      )
+      .slice(0, 4)
+  const availableSongCount =
+    dashboard.availableSongCount ??
+    (publicSongs.length || countUniqueSongs([...favorites, ...recentlyPlayed, ...recommendedSongs, ...latestSongs]))
+
+  return {
+    user: dashboard.user ? normalizeUser(dashboard.user) : currentUser,
+    favoriteCount: dashboard.favoriteCount ?? dashboard.totalFavorites ?? favorites.length,
+    listeningHistoryCount: dashboard.listeningHistoryCount ?? dashboard.totalListeningHistory ?? historyItems.length,
+    totalPlayedSongs: dashboard.totalPlayedSongs ?? recentlyPlayed.length,
+    availableSongCount,
+    recentlyPlayed: uniqueSongs(recentlyPlayed),
+    favorites: uniqueSongs(favorites),
+    recommendedSongs: uniqueSongs(recommendedSongs),
+    latestSongs: uniqueSongs(latestSongs),
   }
+}
 
-  return mockResolve(undefined)
+export async function getFavorites(_userId: string): Promise<Song[]> {
+  const favorites = await getFavoriteItems()
+
+  return favorites.map((favorite) => normalizeSong(favorite.song))
+}
+
+export async function addFavorite(_userId: string, songId: string): Promise<Favorite> {
+  const response = await api.post<BackendFavoriteResponse>(`/users/me/favorites/${songId}`)
+  const favorite = unwrapResponse<BackendFavoriteResponse>(response)
+
+  return {
+    id: favorite.id,
+    userId: _userId,
+    songId: favorite.song.id ?? favorite.song.songId ?? songId,
+    createdAt: favorite.createdAt,
+  }
+}
+
+export async function removeFavorite(_userId: string, songId: string): Promise<void> {
+  await api.delete(`/users/me/favorites/${songId}`)
 }
 
 export async function getListeningHistory(userId: string): Promise<ListeningHistory[]> {
-  const history = listeningHistory.filter((item) => item.userId === userId).sort(byMostRecentHistory)
+  const history = await getHistoryItems()
 
-  return mockResolve(history)
+  return history.map((item) => ({
+    id: item.id,
+    userId,
+    songId: item.song.id ?? item.song.songId ?? '',
+    playedAt: item.playedAt,
+  }))
 }
 
-export async function updateProfile(userId: string, payload: UpdateProfilePayload): Promise<User> {
-  const user = users.find((item) => item.id === userId)
+export async function updateProfile(_userId: string, payload: UpdateProfilePayload): Promise<User> {
+  const response = await api.put<BackendUserResponse>('/users/me', payload)
+  const user = unwrapResponse<BackendUserResponse>(response)
 
-  if (!user) {
-    throw new Error('User not found')
-  }
-
-  Object.assign(user, payload)
-
-  return mockMutate(user)
+  return normalizeUser(user)
 }
