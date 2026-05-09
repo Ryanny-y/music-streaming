@@ -5,8 +5,8 @@ import { AppTagsPage, TagDetailsPage } from '@/features/tags'
 
 import { DashboardPage } from './pages/DashboardPage'
 import { FavoritesPage } from './pages/FavoritesPage'
-import { HistoryPage } from './pages/HistoryPage'
 import { LibraryPage } from './pages/LibraryPage'
+import { ListeningHistoryPage } from './pages/ListeningHistoryPage'
 import { LyricsPage } from './pages/LyricsPage'
 import { ProfilePage } from './pages/ProfilePage'
 import { SearchPage } from './pages/SearchPage'
@@ -35,7 +35,7 @@ export const userRoutes: RouteObject[] = [
   },
   {
     path: 'history',
-    element: <HistoryPage />,
+    element: <ListeningHistoryPage />,
   },
   {
     path: 'categories',

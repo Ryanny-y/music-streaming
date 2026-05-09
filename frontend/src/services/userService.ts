@@ -82,6 +82,12 @@ export type UserDashboardData = {
   latestSongs: Song[]
 }
 
+export type ListeningHistoryItem = {
+  id: string
+  song: Song
+  playedAt: string
+}
+
 function normalizeDuration(duration: BackendSongResponse['duration']): number {
   if (typeof duration === 'number') {
     return duration
@@ -282,6 +288,18 @@ export async function getListeningHistory(userId: string): Promise<ListeningHist
     songId: item.song.id ?? item.song.songId ?? '',
     playedAt: item.playedAt,
   }))
+}
+
+export async function getListeningHistoryItems(): Promise<ListeningHistoryItem[]> {
+  const history = await getHistoryItems()
+
+  return history
+    .map((item) => ({
+      id: item.id,
+      song: normalizeSong(item.song),
+      playedAt: item.playedAt,
+    }))
+    .filter((item) => item.song.id)
 }
 
 export async function updateProfile(_userId: string, payload: UpdateProfilePayload): Promise<User> {
