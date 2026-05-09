@@ -1,13 +1,21 @@
-import { Headphones, ShieldCheck } from 'lucide-react'
+import { Headphones, LogIn } from 'lucide-react'
+import type { FormEvent } from 'react'
+import { useState } from 'react'
 import { Navigate, useNavigate } from 'react-router-dom'
 
 import { Button } from '@/components/ui'
 import { useAuth } from '@/features/auth'
+import { getAuthErrorMessage } from '@/features/auth/services/authService'
 import { APP_NAME } from '@/lib/constants'
-import type { ApiUserRole } from '@/types'
 
 export function LoginPage() {
-  const { isAuthenticated, isLoading, loginAsRole, user } = useAuth()
+  const { isAuthenticated, isLoading, login, user } = useAuth()
+  const [form, setForm] = useState({
+    email: '',
+    password: '',
+  })
+  const [errorMessage, setErrorMessage] = useState('')
+  const [isSubmitting, setIsSubmitting] = useState(false)
   const navigate = useNavigate()
 
   if (isLoading) {
@@ -18,9 +26,21 @@ export function LoginPage() {
     return <Navigate to={user?.role === 'ADMIN' ? '/admin/dashboard' : '/app/dashboard'} replace />
   }
 
-  const handleLogin = async (role: ApiUserRole) => {
-    await loginAsRole(role)
-    navigate(role === 'ADMIN' ? '/admin/dashboard' : '/app/dashboard', { replace: true })
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault()
+    setErrorMessage('')
+    setIsSubmitting(true)
+
+    try {
+      const authenticatedUser = await login(form)
+      navigate(authenticatedUser.role === 'ADMIN' ? '/admin/dashboard' : '/app/dashboard', {
+        replace: true,
+      })
+    } catch (error) {
+      setErrorMessage(getAuthErrorMessage(error))
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
   return (
@@ -34,29 +54,63 @@ export function LoginPage() {
         </div>
 
         <section className="rounded-lg border bg-card p-8 text-card-foreground shadow-sm">
-          <p className="text-sm font-medium text-primary">Mock authentication</p>
+          <p className="text-sm font-medium text-primary">Account access</p>
           <h1 className="mt-3 text-3xl font-semibold tracking-normal">Login</h1>
-          <p className="mt-4 text-muted-foreground">
-            Choose a mock account to continue into the music streaming MVP.
-          </p>
+          <p className="mt-4 text-muted-foreground">Sign in with your Spotmyfy account.</p>
 
-          <div className="mt-8 grid gap-3">
-            <Button type="button" className="w-full" onClick={() => void handleLogin('USER')}>
-              <Headphones className="size-4" aria-hidden="true" />
-              Login as User
+          <form className="mt-8 grid gap-4" onSubmit={handleSubmit}>
+            <Field
+              label="Email"
+              type="email"
+              value={form.email}
+              disabled={isSubmitting}
+              onChange={(value) => setForm((current) => ({ ...current, email: value }))}
+            />
+            <Field
+              label="Password"
+              type="password"
+              value={form.password}
+              disabled={isSubmitting}
+              onChange={(value) => setForm((current) => ({ ...current, password: value }))}
+            />
+
+            {errorMessage ? (
+              <p className="rounded-md border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive">
+                {errorMessage}
+              </p>
+            ) : null}
+
+            <Button className="mt-2 w-full" type="submit" disabled={isSubmitting}>
+              <LogIn className="size-4" aria-hidden="true" />
+              {isSubmitting ? 'Logging in' : 'Login'}
             </Button>
-            <Button
-              type="button"
-              variant="secondary"
-              className="w-full"
-              onClick={() => void handleLogin('ADMIN')}
-            >
-              <ShieldCheck className="size-4" aria-hidden="true" />
-              Login as Admin
-            </Button>
-          </div>
+          </form>
         </section>
       </div>
     </main>
+  )
+}
+
+type FieldProps = {
+  label: string
+  value: string
+  type?: string
+  disabled?: boolean
+  onChange: (value: string) => void
+}
+
+function Field({ disabled = false, label, onChange, type = 'text', value }: FieldProps) {
+  return (
+    <label>
+      <span className="text-sm font-medium text-muted-foreground">{label}</span>
+      <input
+        className="mt-2 h-11 w-full rounded-lg border border-border bg-secondary/70 px-4 text-sm text-foreground outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
+        type={type}
+        value={value}
+        required
+        disabled={disabled}
+        onChange={(event) => onChange(event.target.value)}
+      />
+    </label>
   )
 }

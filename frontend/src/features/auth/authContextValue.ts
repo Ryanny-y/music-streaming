@@ -1,12 +1,12 @@
 import { createContext } from 'react'
 
-import type { ApiUserRole, RegisterPayload, User } from '@/types'
+import type { AuthCredentials, RegisterPayload, User } from '@/types'
 
 export type AuthContextValue = {
   user: User | null
   isLoading: boolean
   isAuthenticated: boolean
-  loginAsRole: (role: ApiUserRole) => Promise<User>
+  login: (credentials: AuthCredentials) => Promise<User>
   register: (payload: RegisterPayload) => Promise<User>
   logout: () => Promise<void>
 }
