@@ -4,7 +4,6 @@ import { adminRoutes } from '@/features/admin'
 import { publicRoutes } from '@/features/public'
 import { userRoutes } from '@/features/user'
 import { AdminLayout, PublicLayout, UserLayout } from '@/layouts'
-import { ProtectedRoute } from '@/routes/ProtectedRoute'
 import { RoleRoute } from '@/routes/RoleRoute'
 
 const router = createBrowserRouter([
@@ -14,7 +13,7 @@ const router = createBrowserRouter([
   },
   {
     path: '/app',
-    element: <ProtectedRoute />,
+    element: <RoleRoute allowedRole="USER" />,
     children: [
       {
         element: <UserLayout />,

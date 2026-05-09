@@ -1,4 +1,5 @@
 import { categories, favorites, listeningHistory, songs, tags, users } from '@/mocks/musicData'
+import { getAdminDashboard as getBackendAdminDashboard } from '@/features/admin/services/adminService'
 import type {
   AdminDashboard,
   ApiUserRole,
@@ -15,18 +16,7 @@ import type {
 import { mockMutate, mockResolve } from './mockApi'
 
 export async function getAdminDashboard(): Promise<AdminDashboard> {
-  const publishedSongs = songs.filter((song) => song.status === 'PUBLISHED').length
-
-  return mockResolve({
-    totalSongs: songs.length,
-    publishedSongs,
-    unpublishedSongs: songs.length - publishedSongs,
-    totalUsers: users.length,
-    activeUsers: users.filter((user) => user.isActive).length,
-    totalCategories: categories.length,
-    totalTags: tags.length,
-    totalPlays: songs.reduce((total, song) => total + song.playCount, 0),
-  })
+  return getBackendAdminDashboard()
 }
 
 export async function getUsers(): Promise<User[]> {

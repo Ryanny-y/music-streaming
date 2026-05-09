@@ -1,31 +1,53 @@
-import { Activity, FolderOpen, ListMusic, Music2, Radio, Tags, Users } from 'lucide-react'
-import { useEffect, useMemo, useState } from 'react'
+import { Activity, FolderOpen, Music2, Radio, Tags, Users } from 'lucide-react'
+import { useEffect, useState } from 'react'
 
-import { DataTable, LoadingState, PageHeader, SongList, StatCard, type DataTableColumn } from '@/components/common'
+import {
+  DataTable,
+  EmptyState,
+  LoadingState,
+  PageHeader,
+  SongList,
+  StatCard,
+  type DataTableColumn,
+} from '@/components/common'
 import { adminService } from '@/services'
-import type { AdminDashboard, Song, User } from '@/types'
+import type { AdminDashboard, Song } from '@/types'
+
+function getErrorMessage(error: unknown): string {
+  return error instanceof Error ? error.message : 'Unable to load admin dashboard right now.'
+}
 
 export function AdminDashboardPage() {
   const [dashboard, setDashboard] = useState<AdminDashboard | null>(null)
-  const [songs, setSongs] = useState<Song[]>([])
-  const [users, setUsers] = useState<User[]>([])
+  const [errorMessage, setErrorMessage] = useState('')
   const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
-    Promise.all([adminService.getAdminDashboard(), adminService.getSongs(), adminService.getUsers()])
-      .then(([adminDashboard, songList, userList]) => {
-        setDashboard(adminDashboard)
-        setSongs(songList)
-        setUsers(userList)
-      })
-      .finally(() => setIsLoading(false))
-  }, [])
+    let isMounted = true
 
-  const mostPlayedSongs = useMemo(() => [...songs].sort((a, b) => b.playCount - a.playCount).slice(0, 5), [songs])
-  const recentSongs = useMemo(
-    () => [...songs].sort((a, b) => new Date(b.releaseDate).getTime() - new Date(a.releaseDate).getTime()).slice(0, 5),
-    [songs],
-  )
+    adminService
+      .getAdminDashboard()
+      .then((adminDashboard) => {
+        if (isMounted) {
+          setDashboard(adminDashboard)
+        }
+      })
+      .catch((error) => {
+        if (isMounted) {
+          setDashboard(null)
+          setErrorMessage(getErrorMessage(error))
+        }
+      })
+      .finally(() => {
+        if (isMounted) {
+          setIsLoading(false)
+        }
+      })
+
+    return () => {
+      isMounted = false
+    }
+  }, [])
 
   const columns: DataTableColumn<Song>[] = [
     { key: 'title', header: 'Song', cell: (song) => <span className="font-medium">{song.title}</span> },
@@ -34,8 +56,17 @@ export function AdminDashboardPage() {
     { key: 'plays', header: 'Plays', cell: (song) => song.playCount.toLocaleString() },
   ]
 
-  if (isLoading || !dashboard) {
+  if (isLoading) {
     return <LoadingState label="Loading admin dashboard" />
+  }
+
+  if (errorMessage || !dashboard) {
+    return (
+      <EmptyState
+        title="Could not load admin dashboard"
+        description={errorMessage || 'Dashboard data is unavailable.'}
+      />
+    )
   }
 
   return (
@@ -58,25 +89,27 @@ export function AdminDashboardPage() {
       <section className="grid gap-6 xl:grid-cols-[1fr_24rem]">
         <div className="space-y-5">
           <PageHeader title="Most Played Songs" />
-          <DataTable columns={columns} data={mostPlayedSongs} getRowKey={(song) => song.id} />
+          <DataTable
+            columns={columns}
+            data={dashboard.mostPlayedSongs}
+            emptyMessage="No played songs yet"
+            getRowKey={(song) => song.id}
+          />
         </div>
         <div className="rounded-lg border border-border bg-card/80 p-5">
-          <div className="flex items-center gap-3">
-            <ListMusic className="size-5 text-primary" aria-hidden="true" />
-            <h2 className="text-xl font-semibold">User Activity Summary</h2>
-          </div>
+          <h2 className="text-xl font-semibold">Publishing Summary</h2>
           <dl className="mt-6 grid gap-4 text-sm">
             <Summary label="Active users" value={`${dashboard.activeUsers} of ${dashboard.totalUsers}`} />
-            <Summary label="Inactive users" value={users.filter((user) => !user.isActive).length.toString()} />
-            <Summary label="Total plays" value={dashboard.totalPlays.toLocaleString()} />
-            <Summary label="Admin accounts" value={users.filter((user) => user.role === 'ADMIN').length.toString()} />
+            <Summary label="Published songs" value={`${dashboard.publishedSongs} of ${dashboard.totalSongs}`} />
+            <Summary label="Categories" value={dashboard.totalCategories.toLocaleString()} />
+            <Summary label="Tags" value={dashboard.totalTags.toLocaleString()} />
           </dl>
         </div>
       </section>
 
       <section className="space-y-5">
         <PageHeader title="Recently Uploaded Songs" />
-        <SongList songs={recentSongs} />
+        <SongList songs={dashboard.recentlyUploadedSongs} />
       </section>
     </div>
   )

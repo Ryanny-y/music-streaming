@@ -94,10 +94,12 @@ export type UserDashboard = {
 export type AdminDashboard = {
   totalSongs: number
   publishedSongs: number
-  unpublishedSongs: number
   totalUsers: number
   activeUsers: number
   totalCategories: number
   totalTags: number
-  totalPlays: number
+  mostPlayedSongs: Song[]
+  recentlyUploadedSongs: Song[]
+  unpublishedSongs?: number
+  totalPlays?: number
 }

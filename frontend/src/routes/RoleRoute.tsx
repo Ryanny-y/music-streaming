@@ -19,7 +19,7 @@ export function RoleRoute({ allowedRole }: RoleRouteProps) {
   }
 
   if (user?.role !== allowedRole) {
-    return <Navigate to="/app/dashboard" replace />
+    return <Navigate to={user?.role === 'ADMIN' ? '/admin/dashboard' : '/app/dashboard'} replace />
   }
 
   return <Outlet />
