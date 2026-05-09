@@ -2,11 +2,11 @@ import type { RouteObject } from 'react-router-dom'
 
 import { LoginPage, RegisterPage } from '@/features/auth'
 import { CategoriesPage } from '@/features/categories'
-import { SongDetailsPage } from '@/features/songs'
 import { TagsPage } from '@/features/tags'
 
 import { BrowseSongsPage } from './pages/BrowseSongsPage'
 import { HomePage } from './pages/HomePage'
+import { PublicSongDetailsPage } from './pages/PublicSongDetailsPage'
 
 export const publicRoutes: RouteObject[] = [
   {
@@ -27,7 +27,7 @@ export const publicRoutes: RouteObject[] = [
   },
   {
     path: '/songs/:songId',
-    element: <SongDetailsPage />,
+    element: <PublicSongDetailsPage />,
   },
   {
     path: '/categories',

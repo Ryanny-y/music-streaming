@@ -1,3 +1,5 @@
+import { isAxiosError } from 'axios'
+
 import { api, unwrapResponse } from '@/lib/api'
 import type { Song } from '@/types'
 
@@ -83,8 +85,28 @@ export async function getSongById(songId: string): Promise<Song | null> {
     const song = normalizeSong(payload)
 
     return song.status === 'PUBLISHED' ? song : null
-  } catch {
-    return null
+  } catch (error) {
+    if (isAxiosError(error) && error.response?.status === 404) {
+      return null
+    }
+
+    throw error
+  }
+}
+
+export async function getPublicSongDetails(songId: string): Promise<Song | null> {
+  try {
+    const response = await api.get<PublicSongResponse>(`/public/songs/${songId}`)
+    const payload = unwrapResponse<PublicSongResponse>(response)
+    const song = normalizeSong(payload)
+
+    return song.status === 'PUBLISHED' ? song : null
+  } catch (error) {
+    if (isAxiosError(error) && error.response?.status === 404) {
+      return null
+    }
+
+    throw error
   }
 }
 
