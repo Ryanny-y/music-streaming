@@ -1,4 +1,6 @@
 export { publicRoutes } from './routes'
 export { BrowseSongsPage } from './pages/BrowseSongsPage'
 export { HomePage } from './pages/HomePage'
+export { PublicCategoriesPage } from './pages/PublicCategoriesPage'
 export { PublicSongDetailsPage } from './pages/PublicSongDetailsPage'
+export { PublicTagsPage } from './pages/PublicTagsPage'
